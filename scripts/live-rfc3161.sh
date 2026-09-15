@@ -11,9 +11,14 @@ curl --fail --silent --show-error https://freetsa.org/files/tsa.crt > "$work/tsa
 curl --fail --silent --show-error https://freetsa.org/files/cacert.pem > "$work/cacert.pem"
 openssl ts -verify -in "$work/synthetic.tsr" -queryfile "$work/synthetic.tsq" -CAfile "$work/cacert.pem" -untrusted "$work/tsa.crt"
 openssl ts -reply -in "$work/synthetic.tsr" -text | sed -n '1,28p'
-if grep -qi '^access-control-allow-origin:' "$work/headers.txt"; then
-  echo 'FreeTSA response includes Access-Control-Allow-Origin:'
-  grep -i '^access-control-allow-origin:' "$work/headers.txt"
+curl --silent --show-error -D "$work/options-headers.txt" -o /dev/null -X OPTIONS \
+  -H 'Origin: https://example.pages.dev' \
+  -H 'Access-Control-Request-Method: POST' \
+  -H 'Access-Control-Request-Headers: content-type' \
+  https://freetsa.org/tsr || true
+if grep -qi '^access-control-allow-origin:' "$work/headers.txt" "$work/options-headers.txt"; then
+  echo 'FreeTSA exposed an Access-Control-Allow-Origin header; re-check whether the relay is still necessary.'
+  grep -i '^access-control-allow-origin:' "$work/headers.txt" "$work/options-headers.txt" || true
 else
-  echo 'FreeTSA response did not include Access-Control-Allow-Origin; a normal cross-origin browser fetch is expected to be blocked by CORS.'
+  echo 'FreeTSA POST and preflight responses did not expose Access-Control-Allow-Origin; cross-origin browser use requires the same-origin relay.'
 fi

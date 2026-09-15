@@ -144,7 +144,7 @@ export default function App() {
         <section className="hero" aria-labelledby="page-title">
           <p className="eyebrow">KEEP YOUR OWN COPY</p>
           <h1 id="page-title">Keep your own verifiable copy of what you were told.</h1>
-          <p className="lede">For customer service recordings, chat screenshots, and other files you want to keep exactly as they were.</p>
+          <p className="lede">For customer service recordings and chat screenshots you want to keep exactly as they were.</p>
         </section>
 
         <div className="privacy-note" role="note">
@@ -163,7 +163,7 @@ export default function App() {
             <p className="muted">Up to {MAX_FILES} files. {formatBytes(MAX_FILE_BYTES)} each, {formatBytes(MAX_TOTAL_BYTES)} total.</p>
             <label className="file-picker">
               <span>Add recordings or screenshots</span>
-              <input type="file" multiple accept="audio/*,image/*,video/*,.pdf,.txt" onChange={(event) => { addFiles(event.target.files); event.currentTarget.value = ''; }} />
+              <input type="file" multiple accept="audio/*,image/*" onChange={(event) => { addFiles(event.target.files); event.currentTarget.value = ''; }} />
             </label>
 
             {files.length > 0 && (
@@ -265,7 +265,7 @@ export default function App() {
 
         <section id="privacy" className="info-section compact">
           <h2>Privacy</h2>
-          <p>Files, filenames, labels, previews, manifests, and completed proof packages remain in your browser. The RFC 3161 timestamp request contains a SHA-256 digest, protocol metadata, and a random nonce. The app first tries FreeTSA directly; if browser CORS rules block that request, a stateless Cloudflare Pages Function relays only that bounded timestamp request to FreeTSA.</p>
+          <p>Files, filenames, labels, previews, manifests, and completed proof packages remain in your browser. The RFC 3161 timestamp request contains a SHA-256 digest, protocol metadata, and a random nonce. FreeTSA does not currently expose the browser CORS headers required for this cross-origin request, so a stateless Cloudflare Pages Function relays only that bounded timestamp request to FreeTSA.</p>
           <p>The relay does not accept file uploads and does not intentionally store request or response bodies. Normal hosting and network metadata may still be processed by Cloudflare and FreeTSA. Anyone you give the downloaded ZIP to can read the recordings and screenshots inside it.</p>
         </section>
       </main>

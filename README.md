@@ -1,6 +1,6 @@
 # They Told Me by ProofStamp
 
-A small, privacy-first web app for keeping independently verifiable copies of customer-service recordings, chat screenshots, and related files.
+A small, privacy-first web app for keeping independently verifiable copies of customer-service recordings and chat screenshots.
 
 ## What it does
 
@@ -13,8 +13,8 @@ The proof establishes that the exact bytes in the package existed by the signed 
 - Target hosting: **Cloudflare Pages**.
 - No accounts, database, remote proof history, or storage of original files.
 - File reading, previews, SHA-256 hashing, manifest generation, ZIP creation, download, and package verification happen in the browser.
-- Creation first attempts a direct RFC 3161 request to `https://freetsa.org/tsr`.
-- If browser CORS/network rules block that request, `/api/timestamp` is a stateless Cloudflare Pages Function that accepts only a bounded `application/timestamp-query` request and forwards only that request to FreeTSA.
+- A direct browser request to FreeTSA was tested at the HTTP/CORS boundary. FreeTSA's timestamp response did not include `Access-Control-Allow-Origin`, so v1 uses `/api/timestamp`, a stateless Cloudflare Pages Function.
+- The relay parses and accepts only a bounded RFC 3161 SHA-256 request with the expected v1 shape, and forwards it only to the fixed FreeTSA endpoint.
 - The relay does not accept original files, filenames, labels, manifests, previews, or ZIP packages and does not intentionally retain request/response bodies.
 - Cloudflare and FreeTSA may still process ordinary network metadata.
 
@@ -38,7 +38,7 @@ V1 verifies proofs made with the current FreeTSA signer introduced in 2026. Olde
 
 Online OCSP/CRL revocation checking is **not implemented in v1** and is not claimed. The app checks the pinned signer, signature, signed-time certificate validity, timestamping EKU, digest, and nonce. If any required check is unavailable or fails, verification is not reported as successful.
 
-A downloaded package remains independently inspectable without a ProofStamp account or database. `VERIFY.txt` explains OpenSSL verification and makes clear that users should obtain trust certificates independently from FreeTSA rather than trusting bundled copies.
+A downloaded package remains independently inspectable without a ProofStamp account or database. Once the app code is loaded, in-app package verification does not require a server lookup; it checks the bundled timestamp against the independently pinned signer policy. This offline check does not include revocation status. `VERIFY.txt` explains OpenSSL verification and makes clear that users should obtain trust certificates independently from FreeTSA rather than trusting bundled copies.
 
 ## Package format
 
@@ -88,7 +88,7 @@ Do not deploy production as part of implementation review.
 
 ## Independent RFC 3161 check
 
-`scripts/live-rfc3161.sh` creates a real timestamp for a small synthetic fixture, downloads FreeTSA's current public certificates directly, and verifies the `.tsq` / `.tsr` pair with OpenSSL. CI runs it so the external path is tested separately from browser package verification.
+`scripts/live-rfc3161.sh` creates a real timestamp for a small synthetic fixture, downloads FreeTSA's current public certificates directly, and verifies the `.tsq` / `.tsr` pair with OpenSSL. CI also runs `npm run test:live`, which uses the application's PKI.js verification path against live FreeTSA responses and exercises a generated portable package.
 
 FreeTSA itself documents the same OpenSSL verification model. The `.tsq` / `.tsr` pair proves the timestamped manifest. Complete ProofStamp verification must additionally hash and check every original listed by `proof/proof.json`.
 

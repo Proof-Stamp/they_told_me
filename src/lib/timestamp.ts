@@ -145,12 +145,6 @@ export async function verifyTimestamp(
 
 export async function requestTimestamp(request: Uint8Array, signal?: AbortSignal): Promise<Uint8Array> {
   const headers = { 'Content-Type': 'application/timestamp-query', Accept: 'application/timestamp-reply' };
-  try {
-    const direct = await fetch(FREETSA_URL, { method: 'POST', headers, body: copyArrayBuffer(request), signal });
-    if (direct.ok) return new Uint8Array(await direct.arrayBuffer());
-  } catch {
-    // CORS/network failure: use the tightly scoped same-origin relay.
-  }
   const relayed = await fetch('/api/timestamp', { method: 'POST', headers, body: copyArrayBuffer(request), signal });
   if (!relayed.ok) throw new Error('The timestamp service is unavailable. Try again.');
   return new Uint8Array(await relayed.arrayBuffer());

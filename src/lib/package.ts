@@ -1,7 +1,7 @@
 import JSZip from 'jszip';
 import { sha256, toHex } from './bytes';
 import type { ProofManifest } from './manifest';
-import { MANIFEST_VERSION, MAX_FILES, MAX_TOTAL_BYTES } from './manifest';
+import { MANIFEST_VERSION, MAX_FILE_BYTES, MAX_FILES, MAX_TOTAL_BYTES } from './manifest';
 import { verifyTimestamp } from './timestamp';
 
 export interface VerifyResult {
@@ -105,8 +105,23 @@ export async function verifyProofZip(blob: Blob): Promise<VerifyResult> {
   if (manifest.format !== MANIFEST_VERSION || !Array.isArray(manifest.files) || manifest.files.length < 1 || manifest.files.length > MAX_FILES) {
     throw new Error('Package format is not supported.');
   }
+  if (manifest.label !== undefined && (typeof manifest.label !== 'string' || manifest.label.length > 120)) {
+    throw new Error('Package format is not supported.');
+  }
+  let declaredTotal = 0;
+  for (let index = 0; index < manifest.files.length; index += 1) {
+    const item = manifest.files[index];
+    if (!item || typeof item.path !== 'string' || typeof item.name !== 'string'
+      || !Number.isSafeInteger(item.size) || item.size < 0 || item.size > MAX_FILE_BYTES
+      || !/^[0-9a-f]{64}$/.test(item.sha256) || item.order !== index + 1) {
+      throw new Error('Package format is not supported.');
+    }
+    declaredTotal += item.size;
+  }
+  if (declaredTotal > MAX_TOTAL_BYTES) throw new Error('Package exceeds the supported size limit.');
 
   const expectedOriginals = new Set(manifest.files.map((item) => item.path));
+  if (expectedOriginals.size !== manifest.files.length) throw new Error('Package contains duplicate original paths.');
   const actualOriginals = paths.filter((path) => path.startsWith('original/') && !zip.files[path].dir);
   if (actualOriginals.length !== expectedOriginals.size || actualOriginals.some((path) => !expectedOriginals.has(path))) {
     throw new Error('Package incomplete or damaged.');

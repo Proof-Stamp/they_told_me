@@ -7,6 +7,7 @@
     "dev": "vite",
     "build": "tsc -b && vite build",
     "test": "vitest run",
+    "test:live": "LIVE_RFC3161=1 vitest run src/test/live-rfc3161.test.ts",
     "check": "npm run test && npm run build"
   },
   "dependencies": {

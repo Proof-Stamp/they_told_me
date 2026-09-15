@@ -16,5 +16,7 @@ jobs:
       - run: npm install
       - run: npm run check
       - run: npx wrangler pages functions build --outdir .wrangler/functions-build
+      - name: Verify live FreeTSA response with app code
+        run: npm run test:live
       - name: Prove live FreeTSA and OpenSSL path
         run: ./scripts/live-rfc3161.sh
