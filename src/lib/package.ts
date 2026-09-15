@@ -11,7 +11,10 @@ export interface VerifyResult {
 }
 
 function isSafePath(path: string): boolean {
-  return !path.startsWith('/') && !path.includes('\\') && path.split('/').every((part) => part !== '..' && part !== '');
+  if (!path || path.startsWith('/') || path.includes('\\')) return false;
+  const normalized = path.endsWith('/') ? path.slice(0, -1) : path;
+  if (!normalized) return false;
+  return normalized.split('/').every((part) => part !== '..' && part !== '');
 }
 
 async function centralDirectoryPaths(blob: Blob): Promise<string[]> {
@@ -128,7 +131,7 @@ export async function verifyProofZip(blob: Blob): Promise<VerifyResult> {
   }
 
   for (const item of manifest.files) {
-    if (!isSafePath(item.path) || !item.path.startsWith('original/')) throw new Error('Package contains an unsafe path.');
+    if (!isSafePath(item.path) || !item.path.startsWith('original/') || item.path.endsWith('/')) throw new Error('Package contains an unsafe path.');
     const entry = zip.file(item.path);
     if (!entry) throw new Error('Package incomplete or damaged.');
     const bytes = await entry.async('uint8array');
