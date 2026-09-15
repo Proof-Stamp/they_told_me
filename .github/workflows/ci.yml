@@ -1,0 +1,20 @@
+name: CI
+on:
+  pull_request:
+  push:
+    branches: [main]
+
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    timeout-minutes: 12
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version-file: .nvmrc
+      - run: npm install
+      - run: npm run check
+      - run: npx wrangler pages functions build --outdir .wrangler/functions-build
+      - name: Prove live FreeTSA and OpenSSL path
+        run: ./scripts/live-rfc3161.sh

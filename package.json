@@ -1,0 +1,28 @@
+{
+  "name": "they-told-me",
+  "private": true,
+  "version": "0.1.0",
+  "type": "module",
+  "scripts": {
+    "dev": "vite",
+    "build": "tsc -b && vite build",
+    "test": "vitest run",
+    "check": "npm run test && npm run build"
+  },
+  "dependencies": {
+    "asn1js": "^3.0.6",
+    "jszip": "^3.10.1",
+    "pkijs": "^3.4.0",
+    "react": "^19.1.1",
+    "react-dom": "^19.1.1"
+  },
+  "devDependencies": {
+    "@types/react": "^19.1.10",
+    "@types/react-dom": "^19.1.7",
+    "@vitejs/plugin-react": "^5.0.2",
+    "typescript": "^5.9.2",
+    "vite": "^7.1.5",
+    "vitest": "^3.2.4",
+    "wrangler": "^4.34.0"
+  }
+}
