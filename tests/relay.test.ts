@@ -10,6 +10,7 @@ describe("Cloudflare timestamp relay", () => {
       expect(String(input)).toBe("https://freetsa.org/tsr");
       expect(init?.method).toBe("POST");
       expect(init?.body).toEqual(query);
+      expect(init?.redirect).toBe("manual");
       return new Response(new Uint8Array([48, 0]), { status: 200 });
     });
     vi.stubGlobal("fetch", upstream);
@@ -49,5 +50,17 @@ describe("Cloudflare timestamp relay", () => {
     const response = await onRequest({ request });
     expect(response.status).toBe(413);
     expect(upstream).not.toHaveBeenCalled();
+  });
+
+  it("does not follow an unexpected upstream redirect", async () => {
+    vi.stubGlobal("fetch", vi.fn(async () => new Response(null, { status: 302, headers: { Location: "https://example.invalid/" } })));
+    const request = new Request("https://preview.example/api/timestamp", {
+      method: "POST",
+      headers: { "Content-Type": "application/timestamp-query" },
+      body: new Uint8Array([48, 0]),
+    });
+    const response = await onRequest({ request });
+    expect(response.status).toBe(502);
+    expect(await response.text()).toBe("Timestamp authority returned HTTP 302.");
   });
 });
