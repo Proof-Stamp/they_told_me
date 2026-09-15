@@ -13,21 +13,32 @@ A timestamp is accepted only when all of these checks pass:
 - the response returns the request nonce;
 - a requested policy OID, if present, is unchanged;
 - the signed time parses correctly;
-- the embedded TSA and root certificates match FreeTSA's independently published SHA-256 certificate fingerprints pinned in the app source;
+- the embedded TSA and root certificates match the exact DER-certificate SHA-256 fingerprints pinned in the app source;
 - the TSA and root certificates were valid at the signed time;
 - the TSA certificate contains the time-stamping extended-key-usage OID;
 - the root self-signature is valid and the TSA certificate is signed by that root;
 - the CMS timestamp signature and certificate chain verify at the signed time; and
 - the actual CMS signer certificate is the pinned FreeTSA TSA certificate.
 
-The pins currently configured for the FreeTSA certificate set published in March 2026 are:
+FreeTSA publishes the current TSA and CA certificate files and the SHA-256 hashes of those files. The live integration test downloads those files from FreeTSA, checks their published file hashes, parses the certificates, and then checks the DER-certificate fingerprints used by the browser trust policy.
+
+Current values:
 
 ```text
-TSA SHA-256  8bfb0305bb64e2571ca507552ef3245cb1c2fee8728e0ff8689225081ea13467
-Root SHA-256 2151b61137ffa86bf664691ba67e7da0b19f98c758e3d228d5d8ebf27e044438
+FreeTSA-published TSA file SHA-256
+8bfb0305bb64e2571ca507552ef3245cb1c2fee8728e0ff8689225081ea13467
+
+FreeTSA-published CA file SHA-256
+2151b61137ffa86bf664691ba67e7da0b19f98c758e3d228d5d8ebf27e044438
+
+Pinned TSA certificate DER SHA-256
+32e841a95cc1164101ffde41298ef2fc75c1c4372ef095e88a6bbd47dfb191fc
+
+Pinned root certificate DER SHA-256
+a6379e7cecc05faa3cbf076013d745e327bbbaa38c0b9af22469d4701d18aabc
 ```
 
-A FreeTSA certificate rotation therefore fails closed until the application is reviewed and its pins are deliberately updated.
+A FreeTSA certificate rotation therefore fails closed until the replacement certificate files are independently reviewed and the pins are deliberately updated.
 
 ## Revocation
 
@@ -43,14 +54,16 @@ An online service is needed only for a fresh revocation-status check or to obtai
 
 ## Independent OpenSSL verification
 
-Extract the ZIP and first verify the saved query/response pair:
+Do not establish certificate trust merely because certificates are included in the ZIP. Obtain the current FreeTSA certificate files independently from FreeTSA and compare their file SHA-256 values with the values FreeTSA publishes on its site.
+
+Then extract the ZIP and verify the saved query/response pair using the independently obtained certificate files:
 
 ```bash
 openssl ts -verify \
   -in proof/timestamp.tsr \
   -queryfile proof/timestamp.tsq \
-  -CAfile certificates/freetsa-root.pem \
-  -untrusted certificates/freetsa-tsa.pem
+  -CAfile cacert.pem \
+  -untrusted tsa.crt
 ```
 
 Then verify the signed timestamp against the exact manifest bytes:
@@ -59,12 +72,10 @@ Then verify the signed timestamp against the exact manifest bytes:
 openssl ts -verify \
   -in proof/timestamp.tsr \
   -data proof/proof.json \
-  -CAfile certificates/freetsa-root.pem \
-  -untrusted certificates/freetsa-tsa.pem
+  -CAfile cacert.pem \
+  -untrusted tsa.crt
 ```
 
 Both should report `Verification: OK` for an intact package.
 
 These commands do not by themselves prove that every file under `original/` matches the manifest. Hash each original and compare its digest with the exact path and SHA-256 value in `proof/proof.json`.
-
-Do not establish trust in the certificate merely because it came from the ZIP. Compare the certificate fingerprints with the fingerprints independently published by FreeTSA at <https://www.freetsa.org/index_en.php>.
