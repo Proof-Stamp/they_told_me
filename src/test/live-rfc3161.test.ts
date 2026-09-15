@@ -5,6 +5,8 @@ import { buildManifest } from '../lib/manifest';
 import { createProofZip, verifyProofZip } from '../lib/package';
 import { createTimestampRequest, FREETSA_URL, verifyTimestamp } from '../lib/timestamp';
 
+declare const process: { env: Record<string, string | undefined> };
+
 const live = process.env.LIVE_RFC3161 === '1' ? describe : describe.skip;
 
 async function stamp(data: Uint8Array): Promise<{ tsq: Uint8Array; tsr: Uint8Array }> {
