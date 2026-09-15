@@ -1,5 +1,6 @@
 const FREETSA_URL = "https://freetsa.org/tsr";
 const MAX_REQUEST_BYTES = 8192;
+const MAX_RESPONSE_BYTES = 64 * 1024;
 const TIMEOUT_MS = 15_000;
 
 type PagesContext = { request: Request };
@@ -40,7 +41,9 @@ export async function onRequestPost(context: PagesContext): Promise<Response> {
     });
     if (!upstream.ok) return plain(`Timestamp authority returned HTTP ${upstream.status}.`, 502);
     const responseBody = await upstream.arrayBuffer();
-    if (responseBody.byteLength === 0) return plain("Timestamp authority returned an empty response.", 502);
+    if (responseBody.byteLength === 0 || responseBody.byteLength > MAX_RESPONSE_BYTES) {
+      return plain("Timestamp authority returned an invalid response size.", 502);
+    }
     return new Response(responseBody, {
       status: 200,
       headers: {
