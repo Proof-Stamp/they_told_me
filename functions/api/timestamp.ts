@@ -16,12 +16,6 @@ function plain(message: string, status: number): Response {
   });
 }
 
-function upstreamErrorDetail(error: unknown): string {
-  if (!(error instanceof Error)) return "Unknown fetch error.";
-  const detail = `${error.name}: ${error.message}`.replace(/[\r\n]+/g, " ").slice(0, 240);
-  return detail || "Unknown fetch error.";
-}
-
 export async function onRequestPost(context: PagesContext): Promise<Response> {
   const contentType = context.request.headers.get("content-type")?.split(";", 1)[0].trim().toLowerCase();
   if (contentType !== "application/timestamp-query") return plain("Expected application/timestamp-query.", 415);
@@ -42,7 +36,7 @@ export async function onRequestPost(context: PagesContext): Promise<Response> {
         Accept: "application/timestamp-reply, application/octet-stream",
       },
       body,
-      redirect: "error",
+      redirect: "manual",
       signal: controller.signal,
     });
     if (!upstream.ok) return plain(`Timestamp authority returned HTTP ${upstream.status}.`, 502);
@@ -58,8 +52,8 @@ export async function onRequestPost(context: PagesContext): Promise<Response> {
         "X-Content-Type-Options": "nosniff",
       },
     });
-  } catch (error) {
-    return plain(`Timestamp authority is unavailable. Diagnostic: ${upstreamErrorDetail(error)}`, 502);
+  } catch {
+    return plain("Timestamp authority is unavailable.", 502);
   } finally {
     clearTimeout(timer);
   }
