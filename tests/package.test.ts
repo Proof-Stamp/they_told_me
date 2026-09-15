@@ -8,6 +8,8 @@ const TSA_PEM = "-----BEGIN CERTIFICATE-----\nsynthetic-tsa\n-----END CERTIFICAT
 const CA_PEM = "-----BEGIN CERTIFICATE-----\nsynthetic-ca\n-----END CERTIFICATE-----\n";
 const REQUEST = new Uint8Array([48, 1, 1]);
 const RESPONSE = new Uint8Array([48, 1, 2]);
+const DUPLICATE_ALIAS = "proof/proof.jsox";
+const DUPLICATE_TARGET = "proof/proof.json";
 
 function selection(name: string, contents: string, type = "text/plain"): SelectedFile {
   return { id: crypto.randomUUID(), file: new File([contents], name, { type }) };
@@ -24,6 +26,29 @@ function verification(): TimestampVerification {
     serialNumberHex: "01",
     revocationChecked: false,
   };
+}
+
+function rewriteZipEntryName(blobBytes: Uint8Array, from: string, to: string): number {
+  const encoder = new TextEncoder();
+  const source = encoder.encode(from);
+  const target = encoder.encode(to);
+  if (source.length !== target.length) throw new Error("ZIP test entry names must have equal byte lengths.");
+
+  let replacements = 0;
+  for (let offset = 0; offset <= blobBytes.length - source.length; offset += 1) {
+    let matches = true;
+    for (let index = 0; index < source.length; index += 1) {
+      if (blobBytes[offset + index] !== source[index]) {
+        matches = false;
+        break;
+      }
+    }
+    if (!matches) continue;
+    blobBytes.set(target, offset);
+    replacements += 1;
+    offset += source.length - 1;
+  }
+  return replacements;
 }
 
 async function packageBlob(options: {
@@ -53,8 +78,8 @@ async function packageBlob(options: {
   const addText = async (path: string, text: string) => {
     if (options.omit !== path) await writer.add(path, new TextReader(text), { level: 0 });
   };
-  await addBytes("proof/proof.json", manifestBytes);
-  if (options.duplicateProofJson) await writer.add("proof/proof.json", new Uint8ArrayReader(manifestBytes), { level: 0 });
+  await addBytes(DUPLICATE_TARGET, manifestBytes);
+  if (options.duplicateProofJson) await writer.add(DUPLICATE_ALIAS, new Uint8ArrayReader(manifestBytes), { level: 0 });
   await addBytes("proof/timestamp.tsq", REQUEST);
   await addBytes("proof/timestamp.tsr", RESPONSE);
   await addText("certificates/freetsa-tsa.pem", options.tsaPem ?? TSA_PEM);
@@ -62,7 +87,15 @@ async function packageBlob(options: {
   await addText("ProofStamp.txt", "synthetic receipt");
   await addText("VERIFY.txt", "synthetic instructions");
   if (options.extra) await addText(options.extra, "unexpected");
-  return { blob: await writer.close(), manifestBytes };
+
+  let blob = await writer.close();
+  if (options.duplicateProofJson) {
+    const bytes = new Uint8Array(await blob.arrayBuffer());
+    const replacements = rewriteZipEntryName(bytes, DUPLICATE_ALIAS, DUPLICATE_TARGET);
+    if (replacements < 2) throw new Error("Could not construct duplicate ZIP-entry fixture.");
+    blob = new Blob([bytes.buffer.slice(bytes.byteOffset, bytes.byteOffset + bytes.byteLength) as ArrayBuffer], { type: "application/zip" });
+  }
+  return { blob, manifestBytes };
 }
 
 function verifier(expectedManifest?: Uint8Array): TimestampVerifier {
