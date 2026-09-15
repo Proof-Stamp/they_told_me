@@ -11,8 +11,8 @@ const mb = (bytes: number) => Math.round(bytes / (1024 * 1024));
 app.innerHTML = `
   <header class="site-header">
     <a class="brand" href="#top" aria-label="They Told Me home">
-      <span class="proof-mark" aria-hidden="true">P<span>•</span></span>
-      <span><strong>They Told Me</strong><small>by ProofStamp</small></span>
+      <span class="product-name">They Told Me</span>
+      <span class="brand-byline">by <img src="/proofstamp-wordmark-blue.svg" alt="ProofStamp" /></span>
     </a>
     <nav aria-label="Primary">
       <a href="#how-it-works">How it works</a>
@@ -24,96 +24,117 @@ app.innerHTML = `
     <section class="hero" aria-labelledby="hero-title">
       <p class="eyebrow">Your copy. Your proof.</p>
       <h1 id="hero-title">Keep your own verifiable copy of what you were told.</h1>
-      <p class="hero-copy">Save a call recording, chat screenshot, or both. The app proves the exact files existed by an independently signed time.</p>
+      <p class="hero-copy">Save a call recording, chat screenshot, or both. Add an independent time you can check later.</p>
     </section>
 
     <section class="privacy-banner" aria-label="Privacy">
-      <span class="privacy-icon" aria-hidden="true">✓</span>
+      <img class="privacy-marker" src="/proof-point-card-marker.svg" alt="" aria-hidden="true" />
       <div>
-        <strong>Your recordings and screenshots stay on your device.</strong>
-        <span>This app does not upload their contents.</span>
+        <strong>Your recordings and screenshots stay on this device.</strong>
+        <span>Only a small timestamp request leaves your browser.</span>
       </div>
     </section>
 
-    <section class="tool-card" aria-label="ProofStamp tool">
-      <div class="tabs" role="tablist" aria-label="Choose a task">
-        <button id="create-tab" class="tab active" type="button" role="tab" aria-selected="true" aria-controls="create-panel">Create Proof</button>
-        <button id="verify-tab" class="tab" type="button" role="tab" aria-selected="false" aria-controls="verify-panel">Verify Proof</button>
-      </div>
+    <div class="mode-switch" aria-label="Choose a task">
+      <button id="create-mode" class="active" type="button" aria-pressed="true" aria-controls="create-panel">Create ProofStamp</button>
+      <button id="verify-mode" type="button" aria-pressed="false" aria-controls="verify-panel">Check ProofStamp</button>
+    </div>
 
-      <div id="create-panel" role="tabpanel" aria-labelledby="create-tab">
-        <div class="steps" aria-label="Creation steps"><span class="active">1 Choose files</span><span>2 Review</span><span>3 Create proof</span><span>4 Download</span></div>
-        <div class="limit-note">Up to ${MAX_FILES} files. ${mb(MAX_FILE_BYTES)} MB per file. ${mb(MAX_TOTAL_BYTES)} MB total.</div>
+    <section class="tool-card" aria-label="ProofStamp tool">
+      <div id="create-panel" aria-labelledby="create-title">
+        <div class="card-heading">
+          <img class="proof-point" src="/proof-point-card-marker.svg" alt="" aria-hidden="true" />
+          <div>
+            <h2 id="create-title">Choose what you want to keep</h2>
+            <p>Add a recording, screenshots, or a mixed set.</p>
+          </div>
+        </div>
+
+        <p id="create-limits" class="limit-note">Up to ${MAX_FILES} files · ${mb(MAX_FILE_BYTES)} MB each · ${mb(MAX_TOTAL_BYTES)} MB total</p>
 
         <label class="file-picker" for="create-files">
-          <span class="file-picker-title">Choose recordings or screenshots</span>
-          <span>You can add more files before creating the proof.</span>
-          <input id="create-files" type="file" multiple />
+          <span id="file-picker-title" class="file-picker-title">Choose recordings or screenshots</span>
+          <span id="file-picker-hint">You can add more than one file.</span>
+          <input id="create-files" type="file" multiple aria-describedby="create-limits" />
         </label>
 
         <div id="selection-wrap" class="selection-wrap hidden">
-          <div class="selection-head"><strong id="selection-count"></strong><button id="clear-files" class="text-button" type="button">Clear all</button></div>
+          <div class="selection-head">
+            <strong id="selection-count"></strong>
+            <button id="clear-files" class="text-button" type="button">Clear all</button>
+          </div>
           <div id="file-list" class="file-list"></div>
-          <label class="field-label" for="proof-label">Optional label</label>
-          <input id="proof-label" class="text-input" maxlength="120" placeholder="Example: Internet cancellation call" />
-          <p class="field-help">This label stays inside the ProofStamp ZIP. It is not sent to the timestamp service.</p>
+          <label class="field-label" for="proof-label">Label <span>(optional)</span></label>
+          <input id="proof-label" class="text-input" maxlength="120" placeholder="Internet cancellation call" aria-describedby="proof-label-help" />
+          <p id="proof-label-help" class="field-help">Saved inside the ProofStamp. Not sent for timestamping.</p>
           <div class="create-actions">
-            <button id="create-proof" class="primary-button" type="button">Create proof</button>
+            <button id="create-proof" class="primary-button" type="button">Create ProofStamp</button>
             <button id="cancel-create" class="secondary-button hidden" type="button">Cancel</button>
           </div>
         </div>
 
         <div id="create-status" class="status-box hidden" role="status" aria-live="polite"></div>
-        <div id="created-result" class="result-card hidden"></div>
+        <div id="created-result" class="result-card hidden" role="status" aria-live="polite"></div>
       </div>
 
-      <div id="verify-panel" class="hidden" role="tabpanel" aria-labelledby="verify-tab">
-        <p class="panel-intro">Choose a <code>.proofstamp.zip</code>. Verification runs in your browser.</p>
+      <div id="verify-panel" class="hidden" aria-labelledby="verify-title">
+        <div class="card-heading">
+          <img class="proof-point" src="/proof-point-card-marker.svg" alt="" aria-hidden="true" />
+          <div>
+            <h2 id="verify-title">Check a ProofStamp</h2>
+            <p>Choose a <code>.proofstamp.zip</code>. Everything is checked on this device.</p>
+          </div>
+        </div>
+
         <label class="file-picker" for="verify-file">
           <span class="file-picker-title">Choose ProofStamp ZIP</span>
-          <span>The package is not uploaded to ProofStamp.</span>
+          <span>The package is not uploaded.</span>
           <input id="verify-file" type="file" accept=".zip,.proofstamp.zip,application/zip" />
         </label>
         <div id="verify-status" class="status-box hidden" role="status" aria-live="polite"></div>
-        <div id="verify-result" class="result-card hidden"></div>
+        <div id="verify-result" class="result-card hidden" role="status" aria-live="polite"></div>
       </div>
     </section>
 
     <section id="how-it-works" class="info-section">
       <p class="eyebrow">How it works</p>
-      <h2>Four steps. Your files remain yours.</h2>
+      <h2>Keep the record. Add independent time.</h2>
       <ol class="how-grid">
-        <li><span>1</span><strong>Choose existing files</strong><p>Add a recording, screenshots, or a mixed set.</p></li>
-        <li><span>2</span><strong>Process locally</strong><p>Your browser calculates SHA-256 hashes and builds a manifest.</p></li>
-        <li><span>3</span><strong>Get an independent time</strong><p>Only the manifest digest and RFC 3161 protocol fields are sent for timestamping.</p></li>
-        <li><span>4</span><strong>Keep one package</strong><p>Download a ZIP containing your originals and everything needed to check the proof.</p></li>
+        <li><span>1</span><strong>Choose the files</strong><p>Add the recording, screenshots, or other files you want to preserve together.</p></li>
+        <li><span>2</span><strong>Process on this device</strong><p>Your browser hashes the files and sends only a small timestamp request.</p></li>
+        <li><span>3</span><strong>Keep one ProofStamp</strong><p>Save the ZIP with your originals and the information needed to check them later.</p></li>
       </ol>
-      <div class="limits-card">
-        <strong>What the proof means</strong>
-        <p>It shows that these exact file bytes existed no later than the signed timestamp.</p>
-        <strong>What it does not mean</strong>
-        <p>It does not prove the conversation's actual date, participants, truth, completeness, or acceptance of an agreement. A timestamp obtained today does not prove an earlier date shown inside a screenshot. ProofStamp also cannot recover a package you lose.</p>
+      <div class="scope-card">
+        <div>
+          <strong>What it proves</strong>
+          <p>These exact file bytes existed no later than the signed timestamp.</p>
+        </div>
+        <div>
+          <strong>What it does not prove</strong>
+          <p>It does not prove the conversation's actual date, participants, truth, completeness, or acceptance of an agreement.</p>
+        </div>
       </div>
     </section>
 
     <section id="privacy" class="info-section privacy-section">
       <p class="eyebrow">Privacy</p>
-      <h2>Your evidence is processed in your browser.</h2>
+      <h2>Your evidence stays local.</h2>
       <p>Original files, filenames, labels, previews, the manifest, and the completed ZIP stay on your device during creation and verification. Only a small RFC 3161 timestamp request containing a SHA-256 digest and protocol fields leaves the browser.</p>
-      <p>The app sends that small timestamp request to a stateless Cloudflare Pages Function, which forwards only the RFC 3161 request to FreeTSA. The relay is not a file upload service and does not accept a destination URL.</p>
-      <p>Normal network metadata can still be visible to Cloudflare and FreeTSA. The app has no accounts, database, analytics, or remote proof history.</p>
-      <p>If you share the downloaded ZIP, the recipient can read the recordings and screenshots inside it.</p>
+      <p>The request goes to a stateless ProofStamp relay on Cloudflare Pages, which forwards it only to FreeTSA. The relay does not accept original files or a destination URL.</p>
+      <p>Cloudflare and FreeTSA can still see normal network metadata. There are no accounts, database, analytics, or remote proof history. Anyone you share the ZIP with can read the originals inside it.</p>
     </section>
   </main>
 
   <footer><span>They Told Me by ProofStamp</span><span>Proof of existence and integrity. Not proof of truth.</span></footer>
 `;
 
-const createTab = document.querySelector<HTMLButtonElement>("#create-tab")!;
-const verifyTab = document.querySelector<HTMLButtonElement>("#verify-tab")!;
+const createMode = document.querySelector<HTMLButtonElement>("#create-mode")!;
+const verifyMode = document.querySelector<HTMLButtonElement>("#verify-mode")!;
 const createPanel = document.querySelector<HTMLDivElement>("#create-panel")!;
 const verifyPanel = document.querySelector<HTMLDivElement>("#verify-panel")!;
 const createInput = document.querySelector<HTMLInputElement>("#create-files")!;
+const filePickerTitle = document.querySelector<HTMLElement>("#file-picker-title")!;
+const filePickerHint = document.querySelector<HTMLElement>("#file-picker-hint")!;
 const selectionWrap = document.querySelector<HTMLDivElement>("#selection-wrap")!;
 const selectionCount = document.querySelector<HTMLElement>("#selection-count")!;
 const fileList = document.querySelector<HTMLDivElement>("#file-list")!;
@@ -133,18 +154,18 @@ let currentProof: (CreatedProof & { transport: "direct" | "relay" }) | null = nu
 let proofDownloadUrl: string | null = null;
 let createController: AbortController | null = null;
 
-function setTab(mode: "create" | "verify"): void {
+function setMode(mode: "create" | "verify"): void {
   const creating = mode === "create";
-  createTab.classList.toggle("active", creating);
-  verifyTab.classList.toggle("active", !creating);
-  createTab.setAttribute("aria-selected", String(creating));
-  verifyTab.setAttribute("aria-selected", String(!creating));
+  createMode.classList.toggle("active", creating);
+  verifyMode.classList.toggle("active", !creating);
+  createMode.setAttribute("aria-pressed", String(creating));
+  verifyMode.setAttribute("aria-pressed", String(!creating));
   createPanel.classList.toggle("hidden", !creating);
   verifyPanel.classList.toggle("hidden", creating);
 }
 
-createTab.addEventListener("click", () => setTab("create"));
-verifyTab.addEventListener("click", () => setTab("verify"));
+createMode.addEventListener("click", () => setMode("create"));
+verifyMode.addEventListener("click", () => setMode("verify"));
 
 function formatBytes(bytes: number): string {
   if (bytes < 1024) return `${bytes} B`;
@@ -211,8 +232,11 @@ function addPreview(container: HTMLElement, file: File): void {
 function renderSelection(): void {
   clearPreviews();
   fileList.replaceChildren();
-  selectionWrap.classList.toggle("hidden", selected.length === 0);
+  const hasFiles = selected.length > 0;
+  selectionWrap.classList.toggle("hidden", !hasFiles);
   selectionCount.textContent = selected.length === 1 ? "1 file selected" : `${selected.length} files selected`;
+  filePickerTitle.textContent = hasFiles ? "Add more recordings or screenshots" : "Choose recordings or screenshots";
+  filePickerHint.textContent = hasFiles ? "Choose more files if needed." : "You can add more than one file.";
 
   for (const item of selected) {
     const row = document.createElement("div");
@@ -225,7 +249,7 @@ function renderSelection(): void {
     const name = document.createElement("strong");
     name.textContent = item.file.name;
     const size = document.createElement("span");
-    size.textContent = formatBytes(item.file.size);
+    size.textContent = `${formatBytes(item.file.size)}${item.file.type ? ` · ${item.file.type}` : ""}`;
     meta.append(name, size);
     const remove = document.createElement("button");
     remove.type = "button";
@@ -244,8 +268,26 @@ function renderSelection(): void {
 
 createInput.addEventListener("change", () => {
   const added = Array.from(createInput.files ?? []).map((file) => ({ id: crypto.randomUUID(), file }));
-  selected = [...selected, ...added];
   createInput.value = "";
+  if (!added.length) return;
+
+  const next = [...selected, ...added];
+  if (next.length > MAX_FILES) {
+    showCreateStatus(`Choose no more than ${MAX_FILES} files.`, "error");
+    return;
+  }
+  const oversized = added.find(({ file }) => file.size > MAX_FILE_BYTES);
+  if (oversized) {
+    showCreateStatus(`${oversized.file.name} is over the ${mb(MAX_FILE_BYTES)} MB per-file limit.`, "error");
+    return;
+  }
+  const totalBytes = next.reduce((sum, item) => sum + item.file.size, 0);
+  if (totalBytes > MAX_TOTAL_BYTES) {
+    showCreateStatus(`These files exceed the ${mb(MAX_TOTAL_BYTES)} MB total limit. Remove a file and try again.`, "error");
+    return;
+  }
+
+  selected = next;
   invalidateProof();
   renderSelection();
 });
@@ -274,7 +316,7 @@ function renderCreated(proof: CreatedProof & { transport: "direct" | "relay" }):
   createdResult.className = "result-card success";
 
   const title = document.createElement("h3");
-  title.textContent = "Proof created";
+  title.textContent = "Your ProofStamp is ready";
   const statement = document.createElement("p");
   statement.className = "result-time";
   statement.textContent = proof.manifest.files.length === 1 ? "This file existed by:" : `These ${proof.manifest.files.length} files existed by:`;
@@ -282,7 +324,7 @@ function renderCreated(proof: CreatedProof & { transport: "direct" | "relay" }):
   time.className = "big-time";
   time.textContent = localDateTime(proof.timestamp.signedTime);
   const explanation = document.createElement("p");
-  explanation.textContent = "Keep this ZIP. It contains your original files and the information needed to check their proof.";
+  explanation.textContent = "Download and keep this ZIP. It contains your originals and everything needed to check the proof later.";
   const download = document.createElement("a");
   download.className = "primary-button download-button";
   download.href = proofDownloadUrl;
@@ -295,7 +337,8 @@ function renderCreated(proof: CreatedProof & { transport: "direct" | "relay" }):
   const summary = document.createElement("summary");
   summary.textContent = "Technical details";
   const detailText = document.createElement("p");
-  detailText.textContent = `UTC: ${proof.timestamp.signedTime.toISOString()} · FreeTSA RFC 3161 · SHA-256 · transport: ${proof.transport === "direct" ? "direct to FreeTSA" : "stateless ProofStamp relay"}. Certificate revocation was not checked by the browser verifier.`;
+  detailText.className = "technical-copy";
+  detailText.textContent = `UTC ${proof.timestamp.signedTime.toISOString()} · FreeTSA RFC 3161 · SHA-256 · timestamp request sent through the ProofStamp relay · certificate revocation not checked by the browser verifier.`;
   details.append(summary, detailText);
   createdResult.append(title, statement, time, explanation, download, downloadNote, details);
 }
@@ -304,20 +347,24 @@ createButton.addEventListener("click", async () => {
   if (createController) return;
   invalidateProof();
   createController = new AbortController();
+  createPanel.setAttribute("aria-busy", "true");
   createButton.disabled = true;
+  createButton.textContent = "Creating ProofStamp…";
   cancelButton.classList.remove("hidden");
-  showCreateStatus("Checking files and creating the timestamp. Keep this tab open.");
+  showCreateStatus("Creating your ProofStamp. Keep this tab open.");
   try {
     const proof = await createProofPackage(selected, labelInput.value, createController.signal);
     currentProof = proof;
-    showCreateStatus("The timestamp response passed the ProofStamp verification policy.");
+    createStatus.classList.add("hidden");
     renderCreated(proof);
   } catch (error) {
-    if (createController.signal.aborted) showCreateStatus("Proof creation was cancelled. No proof was created.", "error");
-    else showCreateStatus(error instanceof Error ? error.message : "Proof could not be created.", "error");
+    if (createController.signal.aborted) showCreateStatus("ProofStamp creation was cancelled. No proof was created.", "error");
+    else showCreateStatus(error instanceof Error ? error.message : "ProofStamp could not be created.", "error");
   } finally {
     createController = null;
+    createPanel.removeAttribute("aria-busy");
     createButton.disabled = false;
+    createButton.textContent = "Create ProofStamp";
     cancelButton.classList.add("hidden");
   }
 });
@@ -336,7 +383,7 @@ function renderVerifyResult(result: Awaited<ReturnType<typeof verifyProofPackage
   } as const;
   title.textContent = titleByStatus[result.status];
   const message = document.createElement("p");
-  message.textContent = result.message;
+  message.textContent = result.status === "verified" ? result.message.replace(/^Verified\.\s*/, "") : result.message;
   verifyResult.append(title, message);
   if (result.signedTime) {
     const time = document.createElement("strong");
@@ -347,7 +394,7 @@ function renderVerifyResult(result: Awaited<ReturnType<typeof verifyProofPackage
   if (result.details?.length) {
     const details = document.createElement("details");
     const summary = document.createElement("summary");
-    summary.textContent = "Details";
+    summary.textContent = result.status === "verified" ? "Technical details" : "Details";
     const list = document.createElement("ul");
     result.details.forEach((detail) => {
       const item = document.createElement("li");
@@ -363,16 +410,18 @@ verifyInput.addEventListener("change", async () => {
   const file = verifyInput.files?.[0];
   verifyResult.classList.add("hidden");
   verifyStatus.className = "status-box working";
-  verifyStatus.textContent = file ? "Checking the package locally…" : "Choose a ProofStamp ZIP.";
+  verifyStatus.textContent = file ? "Checking this ProofStamp on your device…" : "Choose a ProofStamp ZIP.";
   if (!file) return;
+  verifyPanel.setAttribute("aria-busy", "true");
   try {
     const result = await verifyProofPackage(file);
     verifyStatus.classList.add("hidden");
     renderVerifyResult(result);
   } catch (error) {
     verifyStatus.className = "status-box error";
-    verifyStatus.textContent = error instanceof Error ? error.message : "The package could not be checked.";
+    verifyStatus.textContent = error instanceof Error ? error.message : "This ProofStamp could not be checked.";
   } finally {
+    verifyPanel.removeAttribute("aria-busy");
     verifyInput.value = "";
   }
 });
