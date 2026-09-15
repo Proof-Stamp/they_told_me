@@ -1,6 +1,6 @@
 import * as asn1js from 'asn1js';
 import * as pkijs from 'pkijs';
-import { equalBytes, sha256, toHex } from './bytes';
+import { copyArrayBuffer, equalBytes, sha256, toHex } from './bytes';
 
 export const FREETSA_URL = 'https://freetsa.org/tsr';
 export const SHA256_OID = '2.16.840.1.101.3.4.2.1';
@@ -51,7 +51,7 @@ export async function createTimestampRequest(data: Uint8Array): Promise<Uint8Arr
     version: 1,
     messageImprint: new pkijs.MessageImprint({
       hashAlgorithm: new pkijs.AlgorithmIdentifier({ algorithmId: SHA256_OID }),
-      hashedMessage: new asn1js.OctetString({ valueHex: digest.buffer }),
+      hashedMessage: new asn1js.OctetString({ valueHex: copyArrayBuffer(digest) }),
     }),
     nonce: new asn1js.Integer({ valueHex: nonceBytes() }),
     certReq: true,
@@ -130,12 +130,7 @@ export async function verifyTimestamp(
   const verified = await response.verify({
     signer: 0,
     trustedCerts: [signer.cert],
-    data: data.slice().buffer,
-    checkDate: tstInfo.genTime,
-    // The signer certificate itself is the pinned trust anchor for v1.
-    // PKI.js still verifies the CMS signature; certificate validity and EKU
-    // are checked above at the signed time.
-    checkChain: false,
+    data: copyArrayBuffer(data),
   });
   if (!verified) throw new Error('Timestamp signature could not be verified.');
 
@@ -151,12 +146,12 @@ export async function verifyTimestamp(
 export async function requestTimestamp(request: Uint8Array, signal?: AbortSignal): Promise<Uint8Array> {
   const headers = { 'Content-Type': 'application/timestamp-query', Accept: 'application/timestamp-reply' };
   try {
-    const direct = await fetch(FREETSA_URL, { method: 'POST', headers, body: request, signal });
+    const direct = await fetch(FREETSA_URL, { method: 'POST', headers, body: copyArrayBuffer(request), signal });
     if (direct.ok) return new Uint8Array(await direct.arrayBuffer());
   } catch {
     // CORS/network failure: use the tightly scoped same-origin relay.
   }
-  const relayed = await fetch('/api/timestamp', { method: 'POST', headers, body: request, signal });
+  const relayed = await fetch('/api/timestamp', { method: 'POST', headers, body: copyArrayBuffer(request), signal });
   if (!relayed.ok) throw new Error('The timestamp service is unavailable. Try again.');
   return new Uint8Array(await relayed.arrayBuffer());
 }

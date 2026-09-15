@@ -13,9 +13,15 @@ export function equalBytes(a: ArrayBuffer | Uint8Array, b: ArrayBuffer | Uint8Ar
   return true;
 }
 
+export function copyArrayBuffer(input: Uint8Array): ArrayBuffer {
+  const copy = new Uint8Array(input.byteLength);
+  copy.set(input);
+  return copy.buffer;
+}
+
 export async function sha256(input: ArrayBuffer | Uint8Array): Promise<Uint8Array> {
   const bytes = input instanceof Uint8Array ? input : new Uint8Array(input);
-  return new Uint8Array(await crypto.subtle.digest('SHA-256', bytes));
+  return new Uint8Array(await crypto.subtle.digest('SHA-256', copyArrayBuffer(bytes)));
 }
 
 export function pemToDer(pem: string): ArrayBuffer {
