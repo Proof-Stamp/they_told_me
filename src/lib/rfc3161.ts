@@ -1,13 +1,16 @@
 import * as asn1js from "asn1js";
 import * as pkijs from "pkijs";
-import { equalBytes, sha256, toHex } from "./bytes";
+import { equalBytes, exactArrayBuffer, sha256, toHex } from "./bytes";
 
 const SHA256_OID = "2.16.840.1.101.3.4.2.1";
 const SIGNED_DATA_OID = "1.2.840.113549.1.7.2";
 const TSTINFO_OID = "1.2.840.113549.1.9.16.1.4";
 const TIMESTAMP_EKU_OID = "1.3.6.1.5.5.7.3.8";
 
-export const FREETSA_SIGNER_SHA256 = "8bfb0305bb64e2571ca507552ef3245cb1c2fee8728e0ff8689225081ea13467";
+export const TRUSTED_FREETSA_SIGNERS = [
+  "8bfb0305bb64e2571ca507552ef3245cb1c2fee8728e0ff8689225081ea13467"
+] as const;
+export const FREETSA_SIGNER_SHA256 = TRUSTED_FREETSA_SIGNERS[0];
 export const FREETSA_CA_SHA256 = "2151b61137ffa86bf664691ba67e7da0b19f98c758e3d228d5d8ebf27e044438";
 export const FREETSA_URL = "https://freetsa.org/tsr";
 
@@ -41,7 +44,7 @@ function oid(node: asn1js.BaseBlock): string {
 
 export function createTimestampRequest(digest: Uint8Array, nonceBytes?: Uint8Array): { bytes: Uint8Array; nonce: Uint8Array } {
   if (digest.length !== 32) throw new Error("SHA-256 digest must be 32 bytes.");
-  const nonce = nonceBytes ?? crypto.getRandomValues(new Uint8Array(8));
+  const nonce = nonceBytes?.slice() ?? crypto.getRandomValues(new Uint8Array(8));
   nonce[0] &= 0x7f;
   if (nonce.every((b) => b === 0)) nonce[nonce.length - 1] = 1;
   const request = new asn1js.Sequence({
@@ -52,10 +55,10 @@ export function createTimestampRequest(digest: Uint8Array, nonceBytes?: Uint8Arr
           new asn1js.Sequence({
             value: [new asn1js.ObjectIdentifier({ value: SHA256_OID }), new asn1js.Null()]
           }),
-          new asn1js.OctetString({ valueHex: digest.slice().buffer })
+          new asn1js.OctetString({ valueHex: exactArrayBuffer(digest) })
         ]
       }),
-      new asn1js.Integer({ valueHex: nonce.slice().buffer }),
+      new asn1js.Integer({ valueHex: exactArrayBuffer(nonce) }),
       new asn1js.Boolean({ value: true })
     ]
   });
@@ -63,7 +66,7 @@ export function createTimestampRequest(digest: Uint8Array, nonceBytes?: Uint8Arr
 }
 
 export function parseTimestampRequest(bytes: Uint8Array): { digest: Uint8Array; nonce: Uint8Array } {
-  const parsed = asn1js.fromBER(bytes.slice().buffer);
+  const parsed = asn1js.fromBER(exactArrayBuffer(bytes));
   if (parsed.offset === -1) throw new Error("The timestamp request is invalid.");
   const c = seqChildren(parsed.result);
   if (!(c[0] instanceof asn1js.Integer) || c[0].valueBlock.valueDec !== 1) throw new Error("Unsupported timestamp request version.");
@@ -88,7 +91,7 @@ function findSignerCertificate(signedData: pkijs.SignedData): pkijs.Certificate 
 }
 
 function parseTstInfo(bytes: Uint8Array): { digest: Uint8Array; nonce: Uint8Array; genTime: Date; policyOid: string } {
-  const parsed = asn1js.fromBER(bytes.slice().buffer);
+  const parsed = asn1js.fromBER(exactArrayBuffer(bytes));
   if (parsed.offset === -1) throw new Error("The timestamp token content is invalid.");
   const c = seqChildren(parsed.result);
   if (!(c[0] instanceof asn1js.Integer) || c[0].valueBlock.valueDec !== 1) throw new Error("Unsupported timestamp token version.");
@@ -115,7 +118,7 @@ function assertTimestampEku(cert: pkijs.Certificate): void {
 
 export async function validateTimestampResponse(responseBytes: Uint8Array, requestBytes: Uint8Array): Promise<TimestampValidation> {
   const request = parseTimestampRequest(requestBytes);
-  const parsed = asn1js.fromBER(responseBytes.slice().buffer);
+  const parsed = asn1js.fromBER(exactArrayBuffer(responseBytes));
   if (parsed.offset === -1) throw new Error("The timestamp response is invalid.");
   const response = seqChildren(parsed.result);
   if (response.length < 2) throw new Error("The timestamp response does not contain a signed token.");
@@ -138,8 +141,12 @@ export async function validateTimestampResponse(responseBytes: Uint8Array, reque
   const signerCert = findSignerCertificate(signedData);
   const signerDer = new Uint8Array(signerCert.toSchema(true).toBER(false));
   const signerFingerprint = toHex(await sha256(signerDer));
-  if (signerFingerprint !== FREETSA_SIGNER_SHA256) throw new Error("The timestamp signer is not the pinned FreeTSA signer certificate.");
-  if (tst.genTime < signerCert.notBefore.value || tst.genTime > signerCert.notAfter.value) throw new Error("The timestamp signer certificate was not valid at the signed time.");
+  if (!(TRUSTED_FREETSA_SIGNERS as readonly string[]).includes(signerFingerprint)) {
+    throw new Error("The timestamp signer is not in this app's pinned FreeTSA signer trust store.");
+  }
+  if (tst.genTime < signerCert.notBefore.value || tst.genTime > signerCert.notAfter.value) {
+    throw new Error("The timestamp signer certificate was not valid at the signed time.");
+  }
   assertTimestampEku(signerCert);
 
   const signatureOk = await signedData.verify({ signer: 0, checkChain: false });
@@ -156,7 +163,7 @@ export async function requestTimestamp(tsq: Uint8Array, signal?: AbortSignal): P
         "Content-Type": "application/timestamp-query",
         Accept: "application/timestamp-reply"
       },
-      body: tsq,
+      body: exactArrayBuffer(tsq),
       signal
     });
     if (!response.ok) throw new Error(`Timestamp service returned HTTP ${response.status}.`);
