@@ -7,6 +7,11 @@ import { createTimestampRequest, requestFreeTsaTimestamp, verifyTimestamp } from
 
 afterEach(() => vi.unstubAllGlobals());
 
+function bodyBytes(body: BodyInit | null | undefined): Uint8Array {
+  if (!(body instanceof ArrayBuffer)) throw new Error("Expected timestamp request body to be an ArrayBuffer.");
+  return new Uint8Array(body);
+}
+
 describe("RFC 3161 request", () => {
   it("binds SHA-256 data and includes a nonce and certificate request", async () => {
     const data = new TextEncoder().encode("synthetic ProofStamp test");
@@ -32,7 +37,7 @@ describe("timestamp transport privacy", () => {
     const fetchMock = vi.fn(async (_input: RequestInfo | URL, init?: RequestInit) => {
       expect(init?.method).toBe("POST");
       expect(init?.headers).toMatchObject({ "Content-Type": "application/timestamp-query" });
-      expect(init?.body).toBe(tsq);
+      expect(bodyBytes(init?.body)).toEqual(tsq);
       return new Response(new Uint8Array([48, 0]), { status: 200, headers: { "Content-Type": "application/timestamp-reply" } });
     });
     vi.stubGlobal("fetch", fetchMock);
@@ -55,6 +60,6 @@ describe("timestamp transport privacy", () => {
     const result = await requestFreeTsaTimestamp(tsq);
     expect(result.transport).toBe("relay");
     expect(String(calls[1].input)).toBe("/api/timestamp");
-    expect(calls[1].body).toBe(tsq);
+    expect(bodyBytes(calls[1].body)).toEqual(tsq);
   });
 });
