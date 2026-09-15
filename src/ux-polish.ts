@@ -69,11 +69,38 @@ function makeSectionDisclosure(section: HTMLElement, label: string): void {
   section.dataset.disclosureReady = "true";
 }
 
+function addPrivacyVerification(): void {
+  const banner = document.querySelector<HTMLElement>(".privacy-banner");
+  const bannerStrong = banner?.querySelector<HTMLElement>("strong");
+  const bannerText = banner?.querySelector<HTMLElement>("span");
+  if (bannerStrong) bannerStrong.textContent = "Your files stay on this device.";
+  if (bannerText) bannerText.textContent = "Only a small cryptographic timestamp request leaves your browser.";
+
+  const privacy = document.querySelector<HTMLElement>("#privacy");
+  if (!privacy || privacy.querySelector(".privacy-check")) return;
+
+  const check = document.createElement("div");
+  check.className = "privacy-check";
+  const title = document.createElement("strong");
+  title.textContent = "Want to check?";
+  const copy = document.createElement("p");
+  copy.textContent = "They Told Me is open source. You can inspect the code or use your browser’s Network tools while creating a ProofStamp. Your files stay on your device. Only the small timestamp request is sent.";
+  const source = document.createElement("a");
+  source.href = "https://github.com/Proof-Stamp/they_told_me";
+  source.target = "_blank";
+  source.rel = "noopener noreferrer";
+  source.textContent = "View source on GitHub →";
+  check.append(title, copy, source);
+  privacy.append(check);
+}
+
 function setupUxPolish(): void {
   const heroCopy = document.querySelector<HTMLElement>(".hero-copy");
   if (heroCopy) {
     heroCopy.textContent = "Save a call recording, chat screenshot, or both. The app proves the exact files existed by an independently signed time.";
   }
+
+  addPrivacyVerification();
 
   const howItWorks = document.querySelector<HTMLElement>("#how-it-works");
   const privacy = document.querySelector<HTMLElement>("#privacy");
