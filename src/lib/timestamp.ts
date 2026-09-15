@@ -127,16 +127,19 @@ function requireTimestampingEku(cert: Certificate): void {
 
 async function locatePinnedCertificates(signedData: SignedData): Promise<{ tsa: Certificate; ca: Certificate }> {
   const certificates = (signedData.certificates ?? []).filter((item): item is Certificate => item instanceof Certificate);
+  const observed: string[] = [];
   let tsa: Certificate | undefined;
   let ca: Certificate | undefined;
 
   for (const cert of certificates) {
     const sha = await fingerprint(cert);
+    observed.push(sha);
     if (sha === FREETSA_TSA_SHA256) tsa = cert;
     if (sha === FREETSA_CA_SHA256) ca = cert;
   }
-  if (!tsa) throw new Error("Timestamp signer certificate does not match the expected FreeTSA certificate.");
-  if (!ca) throw new Error("Timestamp root certificate does not match the expected FreeTSA root.");
+  const observedText = observed.length ? observed.join(", ") : "none";
+  if (!tsa) throw new Error(`Timestamp signer certificate does not match the expected FreeTSA certificate. Observed SHA-256: ${observedText}.`);
+  if (!ca) throw new Error(`Timestamp root certificate does not match the expected FreeTSA root. Observed SHA-256: ${observedText}.`);
   return { tsa, ca };
 }
 
