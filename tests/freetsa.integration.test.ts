@@ -18,13 +18,15 @@ function certificateFingerprint(certificate: X509Certificate): string {
 }
 
 async function requestFreeTsaDirect(request: Uint8Array): Promise<Uint8Array> {
+  const requestBody = new Uint8Array(request.byteLength);
+  requestBody.set(request);
   const response = await fetch("https://freetsa.org/tsr", {
     method: "POST",
     headers: {
       "Content-Type": "application/timestamp-query",
       Accept: "application/timestamp-reply, application/octet-stream",
     },
-    body: request,
+    body: requestBody.buffer,
   });
   if (!response.ok) throw new Error(`FreeTSA returned HTTP ${response.status}.`);
   const bytes = new Uint8Array(await response.arrayBuffer());
