@@ -18,9 +18,9 @@ It does **not** prove the conversation's actual date, participants, truth, compl
 
 There are no accounts, database, cloud proof history, analytics, or remote storage of user files or proof packages.
 
-File contents, filenames, labels, previews, manifest generation, hashing, ZIP creation, downloads, and package verification run in the browser. Only an RFC 3161 timestamp request containing the manifest digest and protocol fields leaves the browser. The app first tries FreeTSA directly and falls back to a bounded, stateless Cloudflare Pages Function if the browser cannot reach the timestamp authority directly.
+File contents, filenames, labels, previews, manifest generation, hashing, ZIP creation, downloads, and package verification run in the browser. Only an RFC 3161 timestamp request containing the manifest digest and protocol fields leaves the browser. The app sends that request to a bounded, stateless Cloudflare Pages Function, which forwards only the timestamp query to the fixed FreeTSA endpoint.
 
-The relay accepts only `POST application/timestamp-query`, has a small request limit, and forwards only to the fixed FreeTSA endpoint. It never receives original files. Normal network metadata can still be visible to Cloudflare and FreeTSA.
+The relay accepts only `POST application/timestamp-query`, has a small request limit, and never receives original files. The browser Content Security Policy restricts network connections to the app's own origin. Normal network metadata can still be visible to Cloudflare and FreeTSA.
 
 Anyone who receives the downloaded ZIP can read the originals inside it.
 

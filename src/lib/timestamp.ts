@@ -12,7 +12,6 @@ import {
 import {
   FREETSA_CA_SHA256,
   FREETSA_TSA_SHA256,
-  FREETSA_URL,
   HASH_OID_SHA256,
   TIMESTAMPING_EKU,
   TSTINFO_CONTENT_TYPE,
@@ -83,14 +82,10 @@ async function postTimestamp(url: string, request: Uint8Array, signal?: AbortSig
 
 export async function requestFreeTsaTimestamp(request: Uint8Array, signal?: AbortSignal): Promise<{ bytes: Uint8Array; transport: "direct" | "relay" }> {
   try {
-    return { bytes: await postTimestamp(FREETSA_URL, request, signal), transport: "direct" };
-  } catch (directError) {
-    if (signal?.aborted) throw directError;
-    try {
-      return { bytes: await postTimestamp("/api/timestamp", request, signal), transport: "relay" };
-    } catch (relayError) {
-      throw new Error("Could not reach the timestamp authority directly or through the ProofStamp relay.", { cause: relayError });
-    }
+    return { bytes: await postTimestamp("/api/timestamp", request, signal), transport: "relay" };
+  } catch (relayError) {
+    if (signal?.aborted) throw relayError;
+    throw new Error("Could not reach the timestamp authority through the ProofStamp relay.", { cause: relayError });
   }
 }
 

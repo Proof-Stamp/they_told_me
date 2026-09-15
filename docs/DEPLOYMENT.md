@@ -1,6 +1,6 @@
 # Cloudflare Pages configuration
 
-This project is designed for Cloudflare Pages with a single optional Pages Function for RFC 3161 transport. It has no database, KV, Durable Object, R2 bucket, account system, or storage binding.
+This project is designed for Cloudflare Pages with a single Pages Function for RFC 3161 transport. It has no database, KV, Durable Object, R2 bucket, account system, or storage binding.
 
 ## Build settings
 
@@ -44,9 +44,9 @@ A Cloudflare Pages project name and production domain are intentionally not hard
 
 ## Network behavior
 
-Creation tries `https://freetsa.org/tsr` directly first. If that browser request fails, it posts the same small RFC 3161 query to `/api/timestamp`. Neither path sends original file bytes, filenames, labels, previews, the manifest, or the ZIP.
+Creation posts one small RFC 3161 timestamp query to the same-origin `/api/timestamp` route. The Pages Function forwards only that query to the fixed FreeTSA endpoint. Original file bytes, filenames, labels, previews, the manifest, and the ZIP are not sent by the application.
 
-Cloudflare and FreeTSA can still observe normal network metadata associated with requests. The Function code does not log or persist request/response bodies, but platform-level request metadata and operational logging are governed by the hosting/provider configuration.
+The browser Content Security Policy restricts `connect-src` to the app's own origin, so the client does not make direct requests to FreeTSA or another external service. Cloudflare and FreeTSA can still observe normal network metadata associated with the relay request and its upstream request. The Function code does not log or persist request/response bodies, but platform-level request metadata and operational logging are governed by the hosting/provider configuration.
 
 ## Deployment boundary
 

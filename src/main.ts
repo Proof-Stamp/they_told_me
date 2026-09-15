@@ -100,7 +100,7 @@ app.innerHTML = `
       <p class="eyebrow">Privacy</p>
       <h2>Your evidence is processed in your browser.</h2>
       <p>Original files, filenames, labels, previews, the manifest, and the completed ZIP stay on your device during creation and verification. Only a small RFC 3161 timestamp request containing a SHA-256 digest and protocol fields leaves the browser.</p>
-      <p>The app first tries FreeTSA directly. If the browser cannot make that request, it uses a stateless Cloudflare Pages Function that forwards only the timestamp request to FreeTSA. The relay is not a file upload service and does not accept a destination URL.</p>
+      <p>The app sends that small timestamp request to a stateless Cloudflare Pages Function, which forwards only the RFC 3161 request to FreeTSA. The relay is not a file upload service and does not accept a destination URL.</p>
       <p>Normal network metadata can still be visible to Cloudflare and FreeTSA. The app has no accounts, database, analytics, or remote proof history.</p>
       <p>If you share the downloaded ZIP, the recipient can read the recordings and screenshots inside it.</p>
     </section>

@@ -32,9 +32,10 @@ describe("RFC 3161 request", () => {
 });
 
 describe("timestamp transport privacy", () => {
-  it("sends only the timestamp-query bytes on the direct path", async () => {
+  it("sends only the timestamp-query bytes to the same-origin relay", async () => {
     const tsq = new Uint8Array([48, 1, 0]);
-    const fetchMock = vi.fn(async (_input: RequestInfo | URL, init?: RequestInit) => {
+    const fetchMock = vi.fn(async (input: RequestInfo | URL, init?: RequestInit) => {
+      expect(String(input)).toBe("/api/timestamp");
       expect(init?.method).toBe("POST");
       expect(init?.headers).toMatchObject({ "Content-Type": "application/timestamp-query" });
       expect(bodyBytes(init?.body)).toEqual(tsq);
@@ -43,23 +44,20 @@ describe("timestamp transport privacy", () => {
     vi.stubGlobal("fetch", fetchMock);
 
     const result = await requestFreeTsaTimestamp(tsq);
-    expect(result.transport).toBe("direct");
+    expect(result.transport).toBe("relay");
     expect(fetchMock).toHaveBeenCalledTimes(1);
   });
 
-  it("falls back to the same bounded protocol request without adding file metadata", async () => {
+  it("does not try another destination when the relay fails", async () => {
     const tsq = new Uint8Array([48, 2, 1, 0]);
-    const calls: Array<{ input: RequestInfo | URL; body: BodyInit | null | undefined }> = [];
     const fetchMock = vi.fn(async (input: RequestInfo | URL, init?: RequestInit) => {
-      calls.push({ input, body: init?.body });
-      if (calls.length === 1) throw new TypeError("simulated browser CORS/network failure");
-      return new Response(new Uint8Array([48, 0]), { status: 200 });
+      expect(String(input)).toBe("/api/timestamp");
+      expect(bodyBytes(init?.body)).toEqual(tsq);
+      throw new TypeError("simulated relay failure");
     });
     vi.stubGlobal("fetch", fetchMock);
 
-    const result = await requestFreeTsaTimestamp(tsq);
-    expect(result.transport).toBe("relay");
-    expect(String(calls[1].input)).toBe("/api/timestamp");
-    expect(bodyBytes(calls[1].body)).toEqual(tsq);
+    await expect(requestFreeTsaTimestamp(tsq)).rejects.toThrow("through the ProofStamp relay");
+    expect(fetchMock).toHaveBeenCalledTimes(1);
   });
 });
