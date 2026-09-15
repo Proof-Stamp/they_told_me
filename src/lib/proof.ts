@@ -16,7 +16,12 @@ export async function createProof(files: File[], label: string, signal?: AbortSi
   const { bytes: tsq } = createTimestampRequest(digest);
   const { tsr, transport } = await requestTimestamp(tsq, signal);
   const validation = await validateTimestampResponse(tsr, tsq);
-  const zip = await buildProofZip(files, manifest, validation, { manifestBytes, tsq, tsr, signerCert: validation.signerCertificateDer });
+  const zip = await buildProofZip(files, manifest, validation, {
+    manifestBytes,
+    tsq,
+    tsr,
+    signerCert: validation.signerCertificateDer
+  });
   return { zip, manifest, validation, transport };
 }
 
@@ -26,12 +31,35 @@ export type VerifyResult = {
 };
 
 export async function verifyProofPackage(packageBytes: Uint8Array): Promise<VerifyResult> {
-  const entries = unzipProof(packageBytes);
-  const required = ["proof/proof.json", "proof/timestamp.tsq", "proof/timestamp.tsr"];
-  for (const name of required) if (!entries[name]) throw new Error("Package incomplete or damaged: a required proof file is missing.");
+  let entries: Record<string, Uint8Array>;
+  try {
+    entries = unzipProof(packageBytes);
+  } catch (error) {
+    const detail = error instanceof Error ? error.message : "The ZIP could not be read.";
+    throw new Error(`Package incomplete or damaged: ${detail}`);
+  }
+
+  const required = [
+    "proof/proof.json",
+    "proof/timestamp.tsq",
+    "proof/timestamp.tsr",
+    "certificates/freetsa-signer.cer",
+    "ProofStamp.txt",
+    "VERIFY.txt"
+  ];
+  for (const name of required) {
+    if (!entries[name]) throw new Error(`Package incomplete or damaged: ${name} is missing.`);
+  }
 
   const manifestBytes = entries["proof/proof.json"];
-  const manifest = parseManifest(manifestBytes);
+  let manifest: ProofManifest;
+  try {
+    manifest = parseManifest(manifestBytes);
+  } catch (error) {
+    const detail = error instanceof Error ? error.message : "The manifest could not be read.";
+    throw new Error(`Package incomplete or damaged: ${detail}`);
+  }
+
   const expectedOriginals = new Set(manifest.files.map((f) => f.path));
   const actualOriginals = Object.keys(entries).filter((name) => name.startsWith("original/"));
   if (actualOriginals.length !== expectedOriginals.size || actualOriginals.some((name) => !expectedOriginals.has(name))) {
@@ -46,15 +74,32 @@ export async function verifyProofPackage(packageBytes: Uint8Array): Promise<Veri
   }
 
   const request = entries["proof/timestamp.tsq"];
-  const requestDigest = parseTimestampRequest(request).digest;
-  const manifestDigest = await sha256(manifestBytes);
-  if (toHex(requestDigest) !== toHex(manifestDigest)) throw new Error("Package incomplete or damaged: the manifest is not the timestamped manifest.");
+  let requestDigest: Uint8Array;
+  try {
+    requestDigest = parseTimestampRequest(request).digest;
+  } catch (error) {
+    const detail = error instanceof Error ? error.message : "The timestamp request is invalid.";
+    throw new Error(`Package incomplete or damaged: ${detail}`);
+  }
 
-  const validation = await validateTimestampResponse(entries["proof/timestamp.tsr"], request);
+  const manifestDigest = await sha256(manifestBytes);
+  if (toHex(requestDigest) !== toHex(manifestDigest)) {
+    throw new Error("Package incomplete or damaged: the manifest is not the timestamped manifest.");
+  }
+
+  let validation: TimestampValidation;
+  try {
+    validation = await validateTimestampResponse(entries["proof/timestamp.tsr"], request);
+  } catch (error) {
+    const detail = error instanceof Error ? error.message : "The timestamp response is invalid.";
+    throw new Error(`Timestamp could not be verified: ${detail}`);
+  }
+
   const includedSigner = entries["certificates/freetsa-signer.cer"];
-  if (includedSigner && toHex(await sha256(includedSigner)) !== validation.signerFingerprint) {
+  if (toHex(await sha256(includedSigner)) !== validation.signerFingerprint) {
     throw new Error("Package incomplete or damaged: the bundled signer certificate was substituted.");
   }
+
   return { manifest, validation };
 }
 
