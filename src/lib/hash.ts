@@ -22,12 +22,19 @@ export function equalBytes(left: Uint8Array, right: Uint8Array): boolean {
   return difference === 0;
 }
 
-export async function sha256Bytes(input: BufferSource): Promise<Uint8Array> {
-  const digest = await crypto.subtle.digest("SHA-256", input);
+export function toArrayBuffer(input: ArrayBuffer | Uint8Array): ArrayBuffer {
+  if (input instanceof ArrayBuffer) return input;
+  const copy = new Uint8Array(input.byteLength);
+  copy.set(input);
+  return copy.buffer;
+}
+
+export async function sha256Bytes(input: ArrayBuffer | Uint8Array): Promise<Uint8Array> {
+  const digest = await crypto.subtle.digest("SHA-256", toArrayBuffer(input));
   return new Uint8Array(digest);
 }
 
-export async function sha256Hex(input: BufferSource): Promise<string> {
+export async function sha256Hex(input: ArrayBuffer | Uint8Array): Promise<string> {
   return bytesToHex(await sha256Bytes(input));
 }
 
