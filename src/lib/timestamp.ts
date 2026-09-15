@@ -27,7 +27,9 @@ export interface TimestampEvidence {
 }
 
 function asArrayBuffer(bytes: Uint8Array): ArrayBuffer {
-  return bytes.buffer.slice(bytes.byteOffset, bytes.byteOffset + bytes.byteLength) as ArrayBuffer;
+  const copy = new Uint8Array(bytes.byteLength);
+  copy.set(bytes);
+  return copy.buffer;
 }
 
 function integerBytes(value: asn1js.Integer): Uint8Array {
@@ -67,7 +69,7 @@ async function postTimestamp(url: string, request: Uint8Array, signal?: AbortSig
       "Content-Type": "application/timestamp-query",
       Accept: "application/timestamp-reply, application/octet-stream",
     },
-    body: request,
+    body: asArrayBuffer(request),
     cache: "no-store",
     credentials: "omit",
     referrerPolicy: "no-referrer",
