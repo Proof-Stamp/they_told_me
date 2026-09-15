@@ -2,13 +2,6 @@ export function toHex(bytes: Uint8Array): string {
   return Array.from(bytes, (b) => b.toString(16).padStart(2, "0")).join("");
 }
 
-export function fromHex(hex: string): Uint8Array {
-  if (!/^[0-9a-f]*$/i.test(hex) || hex.length % 2 !== 0) throw new Error("Invalid hex");
-  const out = new Uint8Array(hex.length / 2);
-  for (let i = 0; i < out.length; i++) out[i] = Number.parseInt(hex.slice(i * 2, i * 2 + 2), 16);
-  return out;
-}
-
 export function equalBytes(a: ArrayBufferView | ArrayBuffer, b: ArrayBufferView | ArrayBuffer): boolean {
   const aa = a instanceof ArrayBuffer ? new Uint8Array(a) : new Uint8Array(a.buffer, a.byteOffset, a.byteLength);
   const bb = b instanceof ArrayBuffer ? new Uint8Array(b) : new Uint8Array(b.buffer, b.byteOffset, b.byteLength);
@@ -18,8 +11,13 @@ export function equalBytes(a: ArrayBufferView | ArrayBuffer, b: ArrayBufferView 
   return diff === 0;
 }
 
-export async function sha256(data: BufferSource): Promise<Uint8Array> {
-  return new Uint8Array(await crypto.subtle.digest("SHA-256", data));
+export function exactArrayBuffer(bytes: Uint8Array): ArrayBuffer {
+  return bytes.buffer.slice(bytes.byteOffset, bytes.byteOffset + bytes.byteLength) as ArrayBuffer;
+}
+
+export async function sha256(data: Uint8Array | ArrayBuffer): Promise<Uint8Array> {
+  const input = data instanceof Uint8Array ? exactArrayBuffer(data) : data;
+  return new Uint8Array(await crypto.subtle.digest("SHA-256", input));
 }
 
 export function formatBytes(bytes: number): string {
