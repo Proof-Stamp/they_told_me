@@ -182,6 +182,7 @@ export async function verifyTimestamp(data: Uint8Array, requestBytes: Uint8Array
 
   const cmsResult = await signedData.verify({
     signer: 0,
+    data: asArrayBuffer(data),
     checkChain: true,
     checkDate: signedTime,
     trustedCerts: [ca],
