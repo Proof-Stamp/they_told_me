@@ -4,7 +4,12 @@ import { mkdtempSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { describe, expect, it } from "vitest";
-import { FREETSA_CA_SHA256, FREETSA_TSA_SHA256 } from "../src/lib/constants";
+import {
+  FREETSA_CA_FILE_SHA256,
+  FREETSA_CA_SHA256,
+  FREETSA_TSA_FILE_SHA256,
+  FREETSA_TSA_SHA256,
+} from "../src/lib/constants";
 import { sha256Hex } from "../src/lib/hash";
 import { createTimestampRequest, derToPem, requestFreeTsaTimestamp, verifyTimestamp } from "../src/lib/timestamp";
 
@@ -16,10 +21,11 @@ describe("FreeTSA live RFC 3161 integration", () => {
   it("validates a real response in JS and independently with OpenSSL", async () => {
     const tsaFile = new Uint8Array(await (await fetch("https://freetsa.org/files/tsa.crt")).arrayBuffer());
     const caFile = new Uint8Array(await (await fetch("https://freetsa.org/files/cacert.pem")).arrayBuffer());
-    expect(await sha256Hex(tsaFile)).toBe(FREETSA_TSA_SHA256);
-    expect(await sha256Hex(caFile)).toBe(FREETSA_CA_SHA256);
-    console.log(`Official FreeTSA TSA DER fingerprint: ${certificateFingerprint(new X509Certificate(Buffer.from(tsaFile)))}`);
-    console.log(`Official FreeTSA root DER fingerprint: ${certificateFingerprint(new X509Certificate(Buffer.from(caFile)))}`);
+
+    expect(await sha256Hex(tsaFile)).toBe(FREETSA_TSA_FILE_SHA256);
+    expect(await sha256Hex(caFile)).toBe(FREETSA_CA_FILE_SHA256);
+    expect(certificateFingerprint(new X509Certificate(Buffer.from(tsaFile)))).toBe(FREETSA_TSA_SHA256);
+    expect(certificateFingerprint(new X509Certificate(Buffer.from(caFile)))).toBe(FREETSA_CA_SHA256);
 
     const manifestBytes = new TextEncoder().encode('{"synthetic":true,"purpose":"They Told Me integration test"}\n');
     const request = await createTimestampRequest(manifestBytes);
