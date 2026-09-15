@@ -11,10 +11,25 @@ import {
   FREETSA_TSA_SHA256,
 } from "../src/lib/constants";
 import { sha256Hex } from "../src/lib/hash";
-import { createTimestampRequest, derToPem, requestFreeTsaTimestamp, verifyTimestamp } from "../src/lib/timestamp";
+import { createTimestampRequest, derToPem, verifyTimestamp } from "../src/lib/timestamp";
 
 function certificateFingerprint(certificate: X509Certificate): string {
   return certificate.fingerprint256.replaceAll(":", "").toLowerCase();
+}
+
+async function requestFreeTsaDirect(request: Uint8Array): Promise<Uint8Array> {
+  const response = await fetch("https://freetsa.org/tsr", {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/timestamp-query",
+      Accept: "application/timestamp-reply, application/octet-stream",
+    },
+    body: request,
+  });
+  if (!response.ok) throw new Error(`FreeTSA returned HTTP ${response.status}.`);
+  const bytes = new Uint8Array(await response.arrayBuffer());
+  if (bytes.length === 0) throw new Error("FreeTSA returned an empty timestamp response.");
+  return bytes;
 }
 
 describe("FreeTSA live RFC 3161 integration", () => {
@@ -29,8 +44,8 @@ describe("FreeTSA live RFC 3161 integration", () => {
 
     const manifestBytes = new TextEncoder().encode('{"synthetic":true,"purpose":"They Told Me integration test"}\n');
     const request = await createTimestampRequest(manifestBytes);
-    const transport = await requestFreeTsaTimestamp(request);
-    const verified = await verifyTimestamp(manifestBytes, request, transport.bytes);
+    const response = await requestFreeTsaDirect(request);
+    const verified = await verifyTimestamp(manifestBytes, request, response);
 
     expect(verified.signedTime.getTime()).toBeLessThanOrEqual(Date.now() + 60_000);
     expect(verified.revocationChecked).toBe(false);
@@ -43,7 +58,7 @@ describe("FreeTSA live RFC 3161 integration", () => {
     const caPath = join(dir, "ca.pem");
     writeFileSync(manifestPath, manifestBytes);
     writeFileSync(requestPath, request);
-    writeFileSync(responsePath, transport.bytes);
+    writeFileSync(responsePath, response);
     writeFileSync(tsaPath, verified.tsaCertificatePem);
     writeFileSync(caPath, verified.caCertificatePem);
 
@@ -53,7 +68,7 @@ describe("FreeTSA live RFC 3161 integration", () => {
     expect(pair).toMatch(/Verification: OK/);
     expect(exactManifest).toMatch(/Verification: OK/);
 
-    const forged = new Uint8Array(transport.bytes);
+    const forged = new Uint8Array(response);
     forged[forged.length - 1] ^= 1;
     await expect(verifyTimestamp(manifestBytes, request, forged)).rejects.toThrow();
 
