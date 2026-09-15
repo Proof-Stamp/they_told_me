@@ -41,11 +41,44 @@ function enableDropZone(zone: HTMLElement, input: HTMLInputElement, multiple: bo
   });
 }
 
+function makeSectionDisclosure(section: HTMLElement, label: string): void {
+  if (section.dataset.disclosureReady === "true") return;
+
+  const children = Array.from(section.children);
+  const eyebrow = children.find((child) => child.classList.contains("eyebrow"));
+  const heading = children.find((child) => child.tagName === "H2");
+  if (!(heading instanceof HTMLElement)) return;
+
+  const details = document.createElement("details");
+  details.className = "info-disclosure";
+  const summary = document.createElement("summary");
+  summary.setAttribute("aria-label", label);
+
+  if (eyebrow instanceof HTMLElement) summary.append(eyebrow);
+  const title = document.createElement("span");
+  title.className = "info-disclosure-title";
+  title.textContent = heading.textContent ?? label;
+  summary.append(title);
+
+  heading.remove();
+  const content = document.createElement("div");
+  content.className = "info-disclosure-content";
+  while (section.firstChild) content.append(section.firstChild);
+  details.append(summary, content);
+  section.append(details);
+  section.dataset.disclosureReady = "true";
+}
+
 function setupUxPolish(): void {
   const heroCopy = document.querySelector<HTMLElement>(".hero-copy");
   if (heroCopy) {
     heroCopy.textContent = "Save a call recording, chat screenshot, or both. The app proves the exact files existed by an independently signed time.";
   }
+
+  const howItWorks = document.querySelector<HTMLElement>("#how-it-works");
+  const privacy = document.querySelector<HTMLElement>("#privacy");
+  if (howItWorks) makeSectionDisclosure(howItWorks, "How it works");
+  if (privacy) makeSectionDisclosure(privacy, "Privacy");
 
   const desktopDragDrop = window.matchMedia("(hover: hover) and (pointer: fine)").matches;
   if (!desktopDragDrop || typeof DataTransfer === "undefined") return;
