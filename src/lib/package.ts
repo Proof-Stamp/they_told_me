@@ -50,7 +50,7 @@ function readableTime(date: Date): string {
 function receiptText(manifest: ProofManifest, timestamp: TimestampVerification): string {
   const count = manifest.files.length;
   const fileLines = manifest.files.map((file) => `- ${file.originalName} (${file.size} bytes)\n  SHA-256: ${file.sha256}`).join("\n");
-  return `They Told Me by ProofStamp\n\nProof created\n${count === 1 ? "This file existed" : `These ${count} files existed`} by ${readableTime(timestamp.signedTime)} UTC.\n\n${manifest.label ? `Label: ${manifest.label}\n\n` : ""}${fileLines}\n\nWhat this proves\nThe exact manifest and listed file bytes existed no later than the signed timestamp.\n\nWhat this does not prove\nIt does not prove when the conversation actually happened, who participated, whether the contents are true or complete, or whether anyone accepted an agreement.\n\nVerification\nOpen this .proofstamp.zip in They Told Me by ProofStamp, or read VERIFY.txt for independent checks.\n`;
+  return `They Told Me by ProofStamp\n\nProof created\n${count === 1 ? "This file existed" : `These ${count} files existed`} by ${readableTime(timestamp.signedTime)}.\n\n${manifest.label ? `Label: ${manifest.label}\n\n` : ""}${fileLines}\n\nWhat this proves\nThe exact manifest and listed file bytes existed no later than the signed timestamp.\n\nWhat this does not prove\nIt does not prove when the conversation actually happened, who participated, whether the contents are true or complete, or whether anyone accepted an agreement.\n\nVerification\nOpen this .proofstamp.zip in They Told Me by ProofStamp, or read VERIFY.txt for independent checks.\n\nCreate your own ProofStamp:\nhttps://they-told-me.proofstamp.org\n`;
 }
 
 function verifyInstructions(): string {
