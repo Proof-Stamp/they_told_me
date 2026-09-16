@@ -91,6 +91,8 @@ mkdir -p .tmp && npx wrangler pages functions build functions --outfile .tmp/pag
 
 See [timestamp trust and independent verification](docs/VERIFICATION.md) and [Cloudflare Pages configuration](docs/DEPLOYMENT.md).
 
+Before a public release, smoke-test the production flow and confirm the header links for **How it works** and **Privacy** open their corresponding disclosures, including when loading the page directly with `#how-it-works` or `#privacy`.
+
 ## Security
 
 Please report security-sensitive issues privately rather than opening a public issue. See [SECURITY.md](SECURITY.md).
