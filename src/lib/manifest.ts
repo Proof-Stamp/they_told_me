@@ -1,4 +1,5 @@
 import { HASH_ALGORITHM, MANIFEST_VERSION, MAX_FILE_BYTES, MAX_FILES, MAX_TOTAL_BYTES, PRODUCT_NAME } from "./constants";
+import { reportCreationStage } from "./creation-progress";
 import { sha256File } from "./hash";
 import type { ManifestFile, ProofManifest, SelectedFile } from "./model";
 import { throwIfAborted } from "./operation-control";
@@ -33,6 +34,7 @@ export function validateSelection(selected: SelectedFile[]): void {
 export async function buildManifest(selected: SelectedFile[], label: string, signal?: AbortSignal): Promise<{ manifest: ProofManifest; bytes: Uint8Array }> {
   validateSelection(selected);
   throwIfAborted(signal);
+  reportCreationStage("hashing-files");
   const files: ManifestFile[] = [];
 
   for (let index = 0; index < selected.length; index += 1) {
