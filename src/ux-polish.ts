@@ -125,6 +125,11 @@ function watchCreatedResult(): void {
   simplifyCreatedResult();
 }
 
+function simplifyFooter(): void {
+  const footerCopy = document.querySelector<HTMLElement>("footer span:nth-child(2)");
+  if (footerCopy) footerCopy.textContent = "Proof of existence and integrity.";
+}
+
 function setupUxPolish(): void {
   const heroCopy = document.querySelector<HTMLElement>(".hero-copy");
   if (heroCopy) {
@@ -132,6 +137,7 @@ function setupUxPolish(): void {
   }
 
   addPrivacyVerification();
+  simplifyFooter();
   watchCreatedResult();
 
   const howItWorks = document.querySelector<HTMLElement>("#how-it-works");

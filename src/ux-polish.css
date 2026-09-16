@@ -16,6 +16,14 @@
   opacity: 0.64;
 }
 
+#create-panel .card-heading > .proof-point {
+  display: none;
+}
+
+#create-panel .limit-note {
+  margin-left: 0;
+}
+
 #create-panel:has(#created-result:not(.hidden)) #create-proof {
   display: none;
 }
