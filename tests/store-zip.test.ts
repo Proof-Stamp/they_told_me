@@ -1,6 +1,6 @@
 import { BlobReader, TextWriter, Uint8ArrayWriter, ZipReader } from "@zip.js/zip.js";
-import { describe, expect, it } from "vitest";
-import { buildStoredZip } from "../src/lib/store-zip";
+import { describe, expect, it, vi } from "vitest";
+import { buildStoredZip, crc32Bytes, rememberBlobCrc32 } from "../src/lib/store-zip";
 
 describe("stored ZIP writer", () => {
   it("creates a standards-compatible uncompressed archive without zip.js writing", async () => {
@@ -32,6 +32,20 @@ describe("stored ZIP writer", () => {
     } finally {
       await reader.close();
     }
+  });
+
+  it("reuses a CRC computed during the initial file read instead of streaming the file again", async () => {
+    const bytes = new TextEncoder().encode("original bytes");
+    const original = new Blob([bytes], { type: "text/plain" });
+    rememberBlobCrc32(original, crc32Bytes(bytes));
+    const streamSpy = vi.spyOn(original, "stream").mockImplementation(() => {
+      throw new Error("original file was read a second time");
+    });
+
+    const archive = await buildStoredZip([{ name: "original/0001--note.txt", data: original }]);
+
+    expect(archive.size).toBeGreaterThan(original.size);
+    expect(streamSpy).not.toHaveBeenCalled();
   });
 
   it("honors cancellation before packaging", async () => {
