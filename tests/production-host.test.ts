@@ -2,9 +2,9 @@ import { describe, expect, it } from "vitest";
 import { isStableProductionHostname, STABLE_PRODUCTION_HOSTNAME } from "../src/lib/production-host";
 
 describe("stable production hostname", () => {
-  it("allows only the stable ProofStamp production hostname", () => {
+  it("allows only the stable ProofStamp custom domain", () => {
     expect(STABLE_PRODUCTION_HOSTNAME).toBe("they-told-me.proofstamp.org");
-    expect(isStableProductionHostname(STABLE_PRODUCTION_HOSTNAME)).toBe(true);
+    expect(isStableProductionHostname("they-told-me.proofstamp.org")).toBe(true);
   });
 
   it("rejects Cloudflare Pages and local hostnames", () => {
