@@ -1,0 +1,141 @@
+@media (hover: hover) and (pointer: fine) {
+  .file-picker.drag-enabled {
+    transition: border-color 120ms ease, background-color 120ms ease, box-shadow 120ms ease;
+  }
+
+  .file-picker.drag-active {
+    border-style: solid;
+    border-color: var(--ps-blue);
+    background: var(--ps-tint);
+    box-shadow: inset 0 0 0 2px rgba(22, 45, 82, 0.08);
+  }
+}
+
+.file-picker.interaction-locked {
+  cursor: wait;
+  opacity: 0.64;
+}
+
+#create-panel:has(#created-result:not(.hidden)) #create-proof {
+  display: none;
+}
+
+#created-result .download-button {
+  display: flex;
+  width: 100%;
+  min-width: 0;
+  margin-top: 14px;
+}
+
+.verify-file-name {
+  margin: 0 0 12px;
+  color: var(--ps-muted);
+  font-size: 13px;
+}
+
+.verify-file-name code {
+  overflow-wrap: anywhere;
+  word-break: break-word;
+}
+
+.verify-another-button {
+  margin-top: 18px;
+}
+
+.info-section:has(.info-disclosure) {
+  padding: 0;
+  border-top: 1px solid var(--ps-border);
+}
+
+.info-section:has(.info-disclosure) + .info-section:has(.info-disclosure) {
+  border-top: 0;
+}
+
+.info-disclosure {
+  margin: 0;
+}
+
+.info-disclosure > summary {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  gap: 4px 16px;
+  align-items: center;
+  min-height: 74px;
+  padding: 16px 2px;
+  list-style: none;
+}
+
+.info-disclosure > summary::-webkit-details-marker {
+  display: none;
+}
+
+.info-disclosure > summary::after {
+  content: "+";
+  grid-column: 2;
+  grid-row: 1 / span 2;
+  color: var(--ps-blue);
+  font-size: 26px;
+  font-weight: 400;
+  line-height: 1;
+}
+
+.info-disclosure[open] > summary::after {
+  content: "−";
+}
+
+.info-disclosure > summary .eyebrow {
+  margin: 0;
+}
+
+.info-disclosure-title {
+  color: var(--ps-blue);
+  font-size: 20px;
+  font-weight: 700;
+  letter-spacing: -0.02em;
+}
+
+.info-disclosure-content {
+  padding: 8px 0 48px;
+}
+
+@media (max-width: 640px) {
+  main {
+    padding-top: 28px;
+  }
+
+  .hero {
+    margin-bottom: 18px;
+  }
+
+  h1 {
+    font-size: clamp(32px, 9vw, 38px);
+    line-height: 1.02;
+  }
+
+  .hero-copy {
+    margin-top: 14px;
+    font-size: 16px;
+    line-height: 1.45;
+  }
+
+  .privacy-banner {
+    margin-bottom: 14px;
+    padding: 14px;
+  }
+
+  .mode-switch {
+    margin-bottom: 14px;
+  }
+
+  .info-disclosure > summary {
+    min-height: 68px;
+  }
+
+  .info-disclosure-title {
+    font-size: 18px;
+  }
+
+  .info-disclosure-content {
+    padding-bottom: 36px;
+  }
+}
