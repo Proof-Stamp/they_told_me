@@ -5,5 +5,6 @@ if (footer) {
   const build = document.createElement("span");
   build.textContent = `Build ${__BUILD_SHA__}`;
   build.title = "Git commit used for this deployment";
-  footer.append(build);
+  const meta = footer.querySelector<HTMLElement>(".footer-meta");
+  (meta ?? footer).append(build);
 }
