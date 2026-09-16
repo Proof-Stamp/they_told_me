@@ -8,7 +8,7 @@ Use these repository settings for a Pages project:
 
 ```text
 Root directory:          repository root
-Install command:         npm install
+Install command:         npm ci
 Build command:           npm run build
 Build output directory:  dist
 Functions directory:     functions
@@ -17,11 +17,11 @@ Environment variables:   none
 
 `npm run build` runs TypeScript checking and then Vite. Vite emits the static site into `dist`.
 
-The Pages Function source is `functions/api/timestamp.ts`, which maps to `/api/timestamp`. It is intentionally stateless and restricted to bounded RFC 3161 timestamp-query POST requests forwarded to the fixed FreeTSA endpoint.
+The Pages Function source is `functions/api/timestamp.ts`, which maps to `/api/timestamp`. It is intentionally stateless and restricted to bounded RFC 3161 timestamp-query POST requests forwarded to the fixed FreeTSA endpoint. Request and upstream response size limits are enforced while streams are read, so a missing `Content-Length` header does not allow an oversized body to be buffered first.
 
 ## Local Pages runtime
 
-After dependencies are installed:
+After dependencies are installed with `npm ci`:
 
 ```bash
 npm run build
@@ -33,7 +33,7 @@ That runs `wrangler pages dev dist`, serving the static `dist` output together w
 For an additional build-only check of the Functions bundle:
 
 ```bash
-npx wrangler pages functions build functions --outfile .tmp/pages-worker.js
+mkdir -p .tmp && npx wrangler pages functions build functions --outfile .tmp/pages-worker.js
 ```
 
 The CI workflow runs this command without deploying anything.

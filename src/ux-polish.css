@@ -11,6 +11,11 @@
   }
 }
 
+.file-picker.interaction-locked {
+  cursor: wait;
+  opacity: 0.64;
+}
+
 .info-section:has(.info-disclosure) {
   padding: 0;
   border-top: 1px solid var(--ps-border);

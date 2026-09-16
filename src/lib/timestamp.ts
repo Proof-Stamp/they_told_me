@@ -18,6 +18,7 @@ import {
 } from "./constants";
 import { bytesToHex, equalBytes, sha256Bytes, sha256Hex } from "./hash";
 import type { TimestampVerification } from "./model";
+import { throwIfAborted } from "./operation-control";
 
 export interface TimestampEvidence {
   request: Uint8Array;
@@ -62,6 +63,7 @@ export async function createTimestampRequest(data: Uint8Array): Promise<Uint8Arr
 }
 
 async function postTimestamp(url: string, request: Uint8Array, signal?: AbortSignal): Promise<Uint8Array> {
+  throwIfAborted(signal);
   const response = await fetch(url, {
     method: "POST",
     headers: {
@@ -74,8 +76,10 @@ async function postTimestamp(url: string, request: Uint8Array, signal?: AbortSig
     referrerPolicy: "no-referrer",
     signal,
   });
+  throwIfAborted(signal);
   if (!response.ok) throw new Error(`Timestamp service returned HTTP ${response.status}.`);
   const bytes = new Uint8Array(await response.arrayBuffer());
+  throwIfAborted(signal);
   if (bytes.length === 0) throw new Error("Timestamp service returned an empty response.");
   return bytes;
 }
@@ -203,8 +207,12 @@ export async function verifyTimestamp(data: Uint8Array, requestBytes: Uint8Array
 }
 
 export async function createTimestampEvidence(data: Uint8Array, signal?: AbortSignal): Promise<TimestampEvidence & { transport: "direct" | "relay" }> {
+  throwIfAborted(signal);
   const request = await createTimestampRequest(data);
+  throwIfAborted(signal);
   const result = await requestFreeTsaTimestamp(request, signal);
+  throwIfAborted(signal);
   const verification = await verifyTimestamp(data, request, result.bytes);
+  throwIfAborted(signal);
   return { request, response: result.bytes, verification, transport: result.transport };
 }

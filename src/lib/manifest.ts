@@ -1,6 +1,7 @@
 import { HASH_ALGORITHM, MANIFEST_VERSION, MAX_FILE_BYTES, MAX_FILES, MAX_TOTAL_BYTES, PRODUCT_NAME } from "./constants";
 import { sha256File } from "./hash";
 import type { ManifestFile, ProofManifest, SelectedFile } from "./model";
+import { throwIfAborted } from "./operation-control";
 
 const encoder = new TextEncoder();
 const SAFE_NAME_RE = /[^A-Za-z0-9._ -]+/g;
@@ -29,19 +30,23 @@ export function validateSelection(selected: SelectedFile[]): void {
   if (total > MAX_TOTAL_BYTES) throw new Error("The selected files are larger than the total size limit.");
 }
 
-export async function buildManifest(selected: SelectedFile[], label: string): Promise<{ manifest: ProofManifest; bytes: Uint8Array }> {
+export async function buildManifest(selected: SelectedFile[], label: string, signal?: AbortSignal): Promise<{ manifest: ProofManifest; bytes: Uint8Array }> {
   validateSelection(selected);
+  throwIfAborted(signal);
   const files: ManifestFile[] = [];
 
   for (let index = 0; index < selected.length; index += 1) {
+    throwIfAborted(signal);
     const file = selected[index].file;
+    const sha256 = await sha256File(file);
+    throwIfAborted(signal);
     files.push({
       order: index + 1,
       path: internalPath(index + 1, file.name),
       originalName: file.name,
       size: file.size,
       mediaType: file.type || "application/octet-stream",
-      sha256: await sha256File(file),
+      sha256,
     });
   }
 
@@ -54,6 +59,7 @@ export async function buildManifest(selected: SelectedFile[], label: string): Pr
     files,
   };
   const bytes = encoder.encode(`${JSON.stringify(manifest, null, 2)}\n`);
+  throwIfAborted(signal);
   return { manifest, bytes };
 }
 

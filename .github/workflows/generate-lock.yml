@@ -1,0 +1,36 @@
+name: Generate dependency lockfile
+
+on:
+  push:
+    branches: ["feat/rfc3161-proofstamp-v1"]
+
+permissions:
+  contents: write
+
+jobs:
+  lockfile:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: feat/rfc3161-proofstamp-v1
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24.15.0
+      - name: Use declared npm version
+        run: npm install --global npm@12.0.2
+      - name: Generate lockfile
+        run: npm install --package-lock-only --ignore-scripts
+      - name: Commit lockfile if needed
+        shell: bash
+        run: |
+          if git diff --quiet -- package-lock.json && git ls-files --error-unmatch package-lock.json >/dev/null 2>&1; then
+            echo "package-lock.json is already current."
+            exit 0
+          fi
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add package-lock.json
+          git commit -m "chore: add reproducible dependency lockfile"
+          git push origin HEAD:feat/rfc3161-proofstamp-v1

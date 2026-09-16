@@ -1,5 +1,6 @@
 import "./styles.css";
 import { MAX_FILE_BYTES, MAX_FILES, MAX_TOTAL_BYTES } from "./lib/constants";
+import { createLatestAsyncRunner, CreationOperation } from "./lib/operation-control";
 import { createProofPackage, verifyProofPackage } from "./lib/package";
 import type { CreatedProof, SelectedFile } from "./lib/model";
 
@@ -152,9 +153,11 @@ let selected: SelectedFile[] = [];
 let previewUrls: string[] = [];
 let currentProof: (CreatedProof & { transport: "direct" | "relay" }) | null = null;
 let proofDownloadUrl: string | null = null;
-let createController: AbortController | null = null;
+const creationOperation = new CreationOperation<SelectedFile>();
+const runLatestVerification = createLatestAsyncRunner();
 
 function setMode(mode: "create" | "verify"): void {
+  if (creationOperation.locked) return;
   const creating = mode === "create";
   createMode.classList.toggle("active", creating);
   verifyMode.classList.toggle("active", !creating);
@@ -186,6 +189,20 @@ function invalidateProof(): void {
   createStatus.classList.add("hidden");
   if (proofDownloadUrl) URL.revokeObjectURL(proofDownloadUrl);
   proofDownloadUrl = null;
+}
+
+function setCreationLocked(locked: boolean): void {
+  createInput.disabled = locked;
+  clearFilesButton.disabled = locked;
+  labelInput.disabled = locked;
+  createMode.disabled = locked;
+  verifyMode.disabled = locked;
+  const picker = createInput.closest<HTMLElement>(".file-picker");
+  picker?.classList.toggle("interaction-locked", locked);
+  picker?.setAttribute("aria-disabled", String(locked));
+  fileList.querySelectorAll<HTMLButtonElement>(".remove-button").forEach((button) => {
+    button.disabled = locked;
+  });
 }
 
 function clearPreviews(): void {
@@ -256,7 +273,9 @@ function renderSelection(): void {
     remove.className = "remove-button";
     remove.setAttribute("aria-label", `Remove ${item.file.name}`);
     remove.textContent = "Remove";
+    remove.disabled = creationOperation.locked;
     remove.addEventListener("click", () => {
+      if (creationOperation.locked) return;
       selected = selected.filter((candidate) => candidate.id !== item.id);
       invalidateProof();
       renderSelection();
@@ -267,6 +286,10 @@ function renderSelection(): void {
 }
 
 createInput.addEventListener("change", () => {
+  if (creationOperation.locked) {
+    createInput.value = "";
+    return;
+  }
   const added = Array.from(createInput.files ?? []).map((file) => ({ id: crypto.randomUUID(), file }));
   createInput.value = "";
   if (!added.length) return;
@@ -293,12 +316,16 @@ createInput.addEventListener("change", () => {
 });
 
 clearFilesButton.addEventListener("click", () => {
+  if (creationOperation.locked) return;
   selected = [];
   invalidateProof();
   renderSelection();
 });
 
-labelInput.addEventListener("input", invalidateProof);
+labelInput.addEventListener("input", () => {
+  if (creationOperation.locked) return;
+  invalidateProof();
+});
 
 function showCreateStatus(message: string, kind: "working" | "error" = "working"): void {
   createStatus.textContent = message;
@@ -344,32 +371,38 @@ function renderCreated(proof: CreatedProof & { transport: "direct" | "relay" }):
 }
 
 createButton.addEventListener("click", async () => {
-  if (createController) return;
+  if (creationOperation.locked) return;
   invalidateProof();
-  createController = new AbortController();
+  const run = creationOperation.start(selected, labelInput.value);
+  setCreationLocked(true);
   createPanel.setAttribute("aria-busy", "true");
   createButton.disabled = true;
   createButton.textContent = "Creating ProofStamp…";
   cancelButton.classList.remove("hidden");
   showCreateStatus("Creating your ProofStamp. Keep this tab open.");
   try {
-    const proof = await createProofPackage(selected, labelInput.value, createController.signal);
+    const proof = await createProofPackage(run.selected, run.label, run.signal);
+    if (run.signal.aborted || !creationOperation.isCurrent(run)) return;
     currentProof = proof;
     createStatus.classList.add("hidden");
     renderCreated(proof);
   } catch (error) {
-    if (createController.signal.aborted) showCreateStatus("ProofStamp creation was cancelled. No proof was created.", "error");
+    if (!creationOperation.isCurrent(run)) return;
+    if (run.signal.aborted) showCreateStatus("ProofStamp creation was cancelled. No proof was created.", "error");
     else showCreateStatus(error instanceof Error ? error.message : "ProofStamp could not be created.", "error");
   } finally {
-    createController = null;
-    createPanel.removeAttribute("aria-busy");
-    createButton.disabled = false;
-    createButton.textContent = "Create ProofStamp";
-    cancelButton.classList.add("hidden");
+    if (creationOperation.isCurrent(run)) {
+      creationOperation.finish(run);
+      createPanel.removeAttribute("aria-busy");
+      setCreationLocked(false);
+      createButton.disabled = false;
+      createButton.textContent = "Create ProofStamp";
+      cancelButton.classList.add("hidden");
+    }
   }
 });
 
-cancelButton.addEventListener("click", () => createController?.abort());
+cancelButton.addEventListener("click", () => creationOperation.cancel());
 
 function renderVerifyResult(result: Awaited<ReturnType<typeof verifyProofPackage>>): void {
   verifyResult.replaceChildren();
@@ -408,22 +441,35 @@ function renderVerifyResult(result: Awaited<ReturnType<typeof verifyProofPackage
 
 verifyInput.addEventListener("change", async () => {
   const file = verifyInput.files?.[0];
-  verifyResult.classList.add("hidden");
-  verifyStatus.className = "status-box working";
-  verifyStatus.textContent = file ? "Checking this ProofStamp on your device…" : "Choose a ProofStamp ZIP.";
-  if (!file) return;
-  verifyPanel.setAttribute("aria-busy", "true");
-  try {
-    const result = await verifyProofPackage(file);
-    verifyStatus.classList.add("hidden");
-    renderVerifyResult(result);
-  } catch (error) {
-    verifyStatus.className = "status-box error";
-    verifyStatus.textContent = error instanceof Error ? error.message : "This ProofStamp could not be checked.";
-  } finally {
-    verifyPanel.removeAttribute("aria-busy");
-    verifyInput.value = "";
+  if (!file) {
+    verifyStatus.className = "status-box working";
+    verifyStatus.textContent = "Choose a ProofStamp ZIP.";
+    return;
   }
+
+  await runLatestVerification(
+    () => verifyProofPackage(file),
+    {
+      onStart: () => {
+        verifyResult.classList.add("hidden");
+        verifyStatus.className = "status-box working";
+        verifyStatus.textContent = "Checking this ProofStamp on your device…";
+        verifyPanel.setAttribute("aria-busy", "true");
+      },
+      onSuccess: (result) => {
+        verifyStatus.classList.add("hidden");
+        renderVerifyResult(result);
+      },
+      onError: (error) => {
+        verifyStatus.className = "status-box error";
+        verifyStatus.textContent = error instanceof Error ? error.message : "This ProofStamp could not be checked.";
+      },
+      onFinish: () => {
+        verifyPanel.removeAttribute("aria-busy");
+        verifyInput.value = "";
+      },
+    },
+  );
 });
 
 window.addEventListener("beforeunload", () => {

@@ -48,8 +48,10 @@ Requirements:
 - Node.js `>=24.15.0`
 - npm `>=12.0.2`
 
+Use the committed dependency lockfile for reproducible installs:
+
 ```bash
-npm install
+npm ci
 npm test
 npm run test:freetsa
 npm run build
@@ -57,14 +59,31 @@ npm run build
 
 `npm run test:freetsa` is a live integration check. It sends a synthetic digest to FreeTSA and verifies the returned timestamp both in JavaScript and with the installed `openssl` CLI.
 
-For local Cloudflare Pages + Functions development after building:
+For local Cloudflare Pages + Functions development after installing dependencies:
 
 ```bash
 npm run build
 npm run pages:dev
 ```
 
+For the same build-only Cloudflare Functions check used in CI:
+
+```bash
+mkdir -p .tmp && npx wrangler pages functions build functions --outfile .tmp/pages-worker.js
+```
+
 See [timestamp trust and independent verification](docs/VERIFICATION.md) and [Cloudflare Pages configuration](docs/DEPLOYMENT.md).
+
+## Public release checklist
+
+The repository can remain private while the preview is being reviewed. Before presenting the project as open source or relying on a public source link:
+
+- choose and commit an intentional `LICENSE` file;
+- make the repository public;
+- verify the GitHub source URL works for a signed-out visitor; and
+- only then use "open source" wording or a public source link in the product UI.
+
+Repository visibility is not changed by the v1 implementation work.
 
 ## Reference state used for v1
 

@@ -1,6 +1,7 @@
 import "./ux-polish.css";
 
 function assignDroppedFiles(input: HTMLInputElement, files: File[]): void {
+  if (input.disabled) return;
   const transfer = new DataTransfer();
   files.forEach((file) => transfer.items.add(file));
   input.files = transfer.files;
@@ -15,12 +16,14 @@ function enableDropZone(zone: HTMLElement, input: HTMLInputElement, multiple: bo
   zone.addEventListener("dragenter", (event) => {
     if (!containsFiles(event)) return;
     event.preventDefault();
+    if (input.disabled) return;
     zone.classList.add("drag-active");
   });
 
   zone.addEventListener("dragover", (event) => {
     if (!containsFiles(event)) return;
     event.preventDefault();
+    if (input.disabled) return;
     if (event.dataTransfer) event.dataTransfer.dropEffect = "copy";
     zone.classList.add("drag-active");
   });
@@ -35,6 +38,7 @@ function enableDropZone(zone: HTMLElement, input: HTMLInputElement, multiple: bo
     if (!containsFiles(event)) return;
     event.preventDefault();
     zone.classList.remove("drag-active");
+    if (input.disabled) return;
     const dropped = Array.from(event.dataTransfer?.files ?? []);
     if (!dropped.length) return;
     assignDroppedFiles(input, multiple ? dropped : dropped.slice(0, 1));
@@ -84,13 +88,8 @@ function addPrivacyVerification(): void {
   const title = document.createElement("strong");
   title.textContent = "Want to check?";
   const copy = document.createElement("p");
-  copy.textContent = "They Told Me is open source. You can inspect the code or use your browser’s Network tools while creating a ProofStamp. Your files stay on your device. Only the small timestamp request is sent.";
-  const source = document.createElement("a");
-  source.href = "https://github.com/Proof-Stamp/they_told_me";
-  source.target = "_blank";
-  source.rel = "noopener noreferrer";
-  source.textContent = "View source on GitHub →";
-  check.append(title, copy, source);
+  copy.textContent = "Open your browser’s Network tools while creating a ProofStamp. You should see only the small timestamp request leave this page, not your files, filenames, label, manifest, previews, or completed ZIP.";
+  check.append(title, copy);
   privacy.append(check);
 }
 
