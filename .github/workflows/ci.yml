@@ -19,8 +19,8 @@ jobs:
           node-version: 24.15.0
       - name: Use declared npm version
         run: npm install --global npm@12.0.2
-      - name: Install dependencies
-        run: npm install
+      - name: Install dependencies from lockfile
+        run: npm ci
       - name: Unit tests
         run: npm test
       - name: Production build
@@ -37,4 +37,4 @@ jobs:
           path: |
             dist
             package-lock.json
-          if-no-files-found: warn
+          if-no-files-found: error
