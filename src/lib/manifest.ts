@@ -1,7 +1,8 @@
 import { HASH_ALGORITHM, MANIFEST_VERSION, MAX_FILE_BYTES, MAX_FILES, MAX_TOTAL_BYTES, PRODUCT_NAME } from "./constants";
-import { sha256File } from "./hash";
+import { sha256Hex } from "./hash";
 import type { ManifestFile, ProofManifest, SelectedFile } from "./model";
 import { throwIfAborted } from "./operation-control";
+import { crc32Bytes } from "./store-zip";
 
 const encoder = new TextEncoder();
 const SAFE_NAME_RE = /[^A-Za-z0-9._ -]+/g;
@@ -30,15 +31,19 @@ export function validateSelection(selected: SelectedFile[]): void {
   if (total > MAX_TOTAL_BYTES) throw new Error("The selected files are larger than the total size limit.");
 }
 
-export async function buildManifest(selected: SelectedFile[], label: string, signal?: AbortSignal): Promise<{ manifest: ProofManifest; bytes: Uint8Array }> {
+export async function buildManifest(selected: SelectedFile[], label: string, signal?: AbortSignal): Promise<{ manifest: ProofManifest; bytes: Uint8Array; fileCrc32: number[] }> {
   validateSelection(selected);
   throwIfAborted(signal);
   const files: ManifestFile[] = [];
+  const fileCrc32: number[] = [];
 
   for (let index = 0; index < selected.length; index += 1) {
     throwIfAborted(signal);
     const file = selected[index].file;
-    const sha256 = await sha256File(file);
+    const fileBytes = new Uint8Array(await file.arrayBuffer());
+    throwIfAborted(signal);
+    const sha256 = await sha256Hex(fileBytes);
+    const crc32 = crc32Bytes(fileBytes);
     throwIfAborted(signal);
     files.push({
       order: index + 1,
@@ -48,6 +53,7 @@ export async function buildManifest(selected: SelectedFile[], label: string, sig
       mediaType: file.type || "application/octet-stream",
       sha256,
     });
+    fileCrc32.push(crc32);
   }
 
   const trimmedLabel = label.trim().slice(0, 120);
@@ -60,7 +66,7 @@ export async function buildManifest(selected: SelectedFile[], label: string, sig
   };
   const bytes = encoder.encode(`${JSON.stringify(manifest, null, 2)}\n`);
   throwIfAborted(signal);
-  return { manifest, bytes };
+  return { manifest, bytes, fileCrc32 };
 }
 
 export function parseManifest(bytes: Uint8Array): ProofManifest {
