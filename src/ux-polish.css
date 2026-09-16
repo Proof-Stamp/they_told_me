@@ -16,6 +16,17 @@
   opacity: 0.64;
 }
 
+#create-panel:has(#created-result:not(.hidden)) #create-proof {
+  display: none;
+}
+
+#created-result .download-button {
+  display: flex;
+  width: 100%;
+  min-width: 0;
+  margin-top: 14px;
+}
+
 .verify-file-name {
   margin: 0 0 12px;
   color: var(--ps-muted);
