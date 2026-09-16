@@ -4,6 +4,7 @@ on:
   push:
     branches: [main, "feat/**"]
   pull_request:
+  workflow_dispatch:
 
 permissions:
   contents: read
@@ -28,6 +29,7 @@ jobs:
       - name: Compile Cloudflare Pages Functions
         run: mkdir -p .tmp && npx wrangler pages functions build functions --outfile .tmp/pages-worker.js
       - name: Live FreeTSA + OpenSSL integration
+        if: github.event_name == 'workflow_dispatch' || (github.event_name == 'push' && github.ref == 'refs/heads/main')
         run: npm run test:freetsa
       - name: Upload build and lockfile
         if: always()
