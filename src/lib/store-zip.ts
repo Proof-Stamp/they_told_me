@@ -15,6 +15,7 @@ const MAX_UINT16 = 0xffff;
 const MAX_UINT32 = 0xffffffff;
 
 const CRC32_TABLE = new Uint32Array(256);
+const KNOWN_BLOB_CRC32 = new WeakMap<Blob, number>();
 for (let value = 0; value < 256; value += 1) {
   let crc = value;
   for (let bit = 0; bit < 8; bit += 1) crc = (crc >>> 1) ^ ((crc & 1) ? 0xedb88320 : 0);
@@ -29,6 +30,10 @@ export function updateCrc32(crc: number, bytes: Uint8Array): number {
 
 export function crc32Bytes(bytes: Uint8Array): number {
   return (updateCrc32(0xffffffff, bytes) ^ 0xffffffff) >>> 0;
+}
+
+export function rememberBlobCrc32(blob: Blob, crc32: number): void {
+  KNOWN_BLOB_CRC32.set(blob, crc32 >>> 0);
 }
 
 async function crc32(data: Blob | Uint8Array, signal?: AbortSignal): Promise<number> {
@@ -141,7 +146,8 @@ export async function buildStoredZip(entries: StoredZipEntry[], signal?: AbortSi
     if (!nameBytes.byteLength || nameBytes.byteLength > MAX_UINT16) throw new Error("ZIP entry name is invalid or too long.");
     if (size > MAX_UINT32 || localOffset > MAX_UINT32) throw new Error("ZIP64 is not supported by this ProofStamp package writer.");
 
-    const crc = entry.crc32 ?? await crc32(entry.data, signal);
+    const cachedBlobCrc = entry.data instanceof Blob ? KNOWN_BLOB_CRC32.get(entry.data) : undefined;
+    const crc = entry.crc32 ?? cachedBlobCrc ?? await crc32(entry.data, signal);
     const header = localHeader(nameBytes, size, crc);
     const central = centralHeader(nameBytes, size, crc, localOffset);
 
