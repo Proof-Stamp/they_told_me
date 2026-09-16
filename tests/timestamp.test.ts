@@ -1,4 +1,3 @@
-import * as asn1js from "asn1js";
 import { TimeStampReq } from "pkijs";
 import { afterEach, describe, expect, it, vi } from "vitest";
 import { HASH_OID_SHA256 } from "../src/lib/constants";
@@ -16,7 +15,7 @@ function bodyBytes(body: BodyInit | null | undefined): Uint8Array {
 }
 
 describe("RFC 3161 request", () => {
-  it("binds SHA-256 data and includes a nonce and certificate request", async () => {
+  it("binds SHA-256 data, requests certificates, and follows FreeTSA's no-nonce profile", async () => {
     const data = new TextEncoder().encode("synthetic ProofStamp test");
     const requestBytes = await createTimestampRequest(data);
     const request = TimeStampReq.fromBER(requestBytes.buffer as ArrayBuffer);
@@ -24,7 +23,7 @@ describe("RFC 3161 request", () => {
     expect(request.certReq).toBe(true);
     expect(request.messageImprint.hashAlgorithm.algorithmId).toBe(HASH_OID_SHA256);
     expect(equalBytes(new Uint8Array(request.messageImprint.hashedMessage.getValue()), await sha256Bytes(data))).toBe(true);
-    expect(request.nonce).toBeInstanceOf(asn1js.Integer);
+    expect(request.nonce).toBeUndefined();
   });
 
   it("fails closed on a malformed timestamp response", async () => {
