@@ -104,14 +104,16 @@ function simplifyCreatedResult(): void {
   const explanation = download.previousElementSibling;
   if (explanation instanceof HTMLParagraphElement) {
     const singleFile = signedStatement?.textContent?.startsWith("This file") ?? false;
-    explanation.textContent = singleFile
+    const desiredCopy = singleFile
       ? "Download one ZIP containing your original file and its proof."
       : "Download one ZIP containing your original files and their proof.";
+    if (explanation.textContent !== desiredCopy) explanation.textContent = desiredCopy;
   }
 
-  result.querySelector(".download-note")?.remove();
+  const downloadNote = result.querySelector(".download-note");
+  if (downloadNote) downloadNote.remove();
   result.querySelectorAll<HTMLDetailsElement>("details").forEach((details) => {
-    details.open = false;
+    if (details.open) details.open = false;
   });
 }
 
@@ -119,7 +121,7 @@ function watchCreatedResult(): void {
   const result = document.querySelector<HTMLElement>("#created-result");
   if (!result) return;
   const observer = new MutationObserver(() => simplifyCreatedResult());
-  observer.observe(result, { childList: true, subtree: true, attributes: true, attributeFilter: ["class"] });
+  observer.observe(result, { childList: true, attributes: true, attributeFilter: ["class"] });
   simplifyCreatedResult();
 }
 
