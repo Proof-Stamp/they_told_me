@@ -2,7 +2,7 @@ import "./keep-handy.css";
 import { isStableProductionHostname } from "./lib/production-host";
 
 function isMobileLike(): boolean {
-  return /Android|iPhone|iPad|iPod/i.test(navigator.userAgent) || window.matchMedia("(pointer: coarse)").matches;
+  return /Android|iPhone|iPad|iPod/i.test(navigator.userAgent) || (navigator.platform === "MacIntel" && navigator.maxTouchPoints > 1);
 }
 
 function shortcutLabel(): string {
@@ -35,6 +35,13 @@ function addFooterShortcut(): void {
   const footer = document.querySelector<HTMLElement>("footer");
   if (!footer || footer.querySelector(".footer-shortcut")) return;
 
+  let meta = footer.querySelector<HTMLElement>(".footer-meta");
+  if (!meta) {
+    meta = document.createElement("span");
+    meta.className = "footer-meta";
+    footer.append(meta);
+  }
+
   const details = document.createElement("details");
   details.className = "footer-shortcut";
 
@@ -45,7 +52,7 @@ function addFooterShortcut(): void {
   instructions.textContent = guidanceCopy();
 
   details.append(summary, instructions);
-  footer.append(details);
+  meta.prepend(details);
 }
 
 if (document.readyState === "loading") {
