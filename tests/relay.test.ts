@@ -37,7 +37,7 @@ describe("Cloudflare timestamp relay", () => {
     const upstream = vi.fn(async (input: RequestInfo | URL, init?: RequestInit) => {
       expect(String(input)).toBe("https://freetsa.org/tsr");
       expect(init?.method).toBe("POST");
-      expect(init?.body).toEqual(query);
+      expect(new Uint8Array(init?.body as ArrayBuffer)).toEqual(query);
       expect(init?.redirect).toBe("manual");
       return new Response(new Uint8Array([48, 0]), { status: 200 });
     });
