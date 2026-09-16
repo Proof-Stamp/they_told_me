@@ -59,7 +59,7 @@ function verifyInstructions(): string {
 
 async function addBytes(writer: ZipWriter<Blob>, path: string, bytes: Uint8Array, signal?: AbortSignal): Promise<void> {
   throwIfAborted(signal);
-  await writer.add(path, new Uint8ArrayReader(bytes), { level: 0 });
+  await writer.add(path, new Uint8ArrayReader(bytes), { level: 0, useWebWorkers: false });
   throwIfAborted(signal);
 }
 
@@ -71,23 +71,23 @@ async function buildPackageBlob(
   signal?: AbortSignal,
 ): Promise<Blob> {
   throwIfAborted(signal);
-  const zipWriter = new ZipWriter(new BlobWriter("application/zip"));
+  const zipWriter = new ZipWriter(new BlobWriter("application/zip"), { useWebWorkers: false });
   for (let index = 0; index < selected.length; index += 1) {
     throwIfAborted(signal);
-    await zipWriter.add(manifest.files[index].path, new BlobReader(selected[index].file), { level: 0 });
+    await zipWriter.add(manifest.files[index].path, new BlobReader(selected[index].file), { level: 0, useWebWorkers: false });
     throwIfAborted(signal);
   }
   await addBytes(zipWriter, PROOF_JSON, manifestBytes, signal);
   await addBytes(zipWriter, TSQ, timestamp.request, signal);
   await addBytes(zipWriter, TSR, timestamp.response, signal);
   throwIfAborted(signal);
-  await zipWriter.add(TSA_CERT, new TextReader(timestamp.verification.tsaCertificatePem), { level: 0 });
+  await zipWriter.add(TSA_CERT, new TextReader(timestamp.verification.tsaCertificatePem), { level: 0, useWebWorkers: false });
   throwIfAborted(signal);
-  await zipWriter.add(CA_CERT, new TextReader(timestamp.verification.caCertificatePem), { level: 0 });
+  await zipWriter.add(CA_CERT, new TextReader(timestamp.verification.caCertificatePem), { level: 0, useWebWorkers: false });
   throwIfAborted(signal);
-  await zipWriter.add(RECEIPT, new TextReader(receiptText(manifest, timestamp.verification)), { level: 0 });
+  await zipWriter.add(RECEIPT, new TextReader(receiptText(manifest, timestamp.verification)), { level: 0, useWebWorkers: false });
   throwIfAborted(signal);
-  await zipWriter.add(VERIFY, new TextReader(verifyInstructions()), { level: 0 });
+  await zipWriter.add(VERIFY, new TextReader(verifyInstructions()), { level: 0, useWebWorkers: false });
   throwIfAborted(signal);
   const packageBlob = await zipWriter.close();
   throwIfAborted(signal);
@@ -138,6 +138,7 @@ async function readBytes(entry: EntryLike): Promise<Uint8Array> {
     checkCrc32: true,
     checkOverlappingEntry: true,
     strictness: "strict",
+    useWebWorkers: false,
   });
   if (!(value instanceof Uint8Array)) throw new Error(`Could not read ${entry.filename}.`);
   return value;
@@ -149,6 +150,7 @@ async function readText(entry: EntryLike): Promise<string> {
     checkCrc32: true,
     checkOverlappingEntry: true,
     strictness: "strict",
+    useWebWorkers: false,
   });
   if (typeof value !== "string") throw new Error(`Could not read ${entry.filename}.`);
   return value;
@@ -167,6 +169,7 @@ export async function verifyProofPackage(blob: Blob, timestampVerifier: Timestam
     strictness: "strict",
     checkCrc32: true,
     checkOverlappingEntry: true,
+    useWebWorkers: false,
   });
 
   try {
