@@ -16,6 +16,7 @@ import {
   TIMESTAMPING_EKU,
   TSTINFO_CONTENT_TYPE,
 } from "./constants";
+import { reportCreationStage } from "./creation-progress";
 import { bytesToHex, equalBytes, sha256Bytes, sha256Hex } from "./hash";
 import type { TimestampVerification } from "./model";
 import { throwIfAborted } from "./operation-control";
@@ -239,9 +240,12 @@ export async function createTimestampEvidence(data: Uint8Array, signal?: AbortSi
   throwIfAborted(signal);
   const request = await createTimestampRequest(data);
   throwIfAborted(signal);
+  reportCreationStage("getting-signed-time");
   const result = await requestFreeTsaTimestamp(request, signal);
   throwIfAborted(signal);
+  reportCreationStage("checking-signed-time");
   const verification = await verifyTimestamp(data, request, result.bytes);
   throwIfAborted(signal);
+  reportCreationStage("building-package");
   return { request, response: result.bytes, verification, transport: result.transport };
 }
