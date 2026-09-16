@@ -146,6 +146,7 @@ const cancelButton = document.querySelector<HTMLButtonElement>("#cancel-create")
 const createStatus = document.querySelector<HTMLDivElement>("#create-status")!;
 const createdResult = document.querySelector<HTMLDivElement>("#created-result")!;
 const verifyInput = document.querySelector<HTMLInputElement>("#verify-file")!;
+const verifyPicker = verifyInput.closest<HTMLElement>(".file-picker")!;
 const verifyStatus = document.querySelector<HTMLDivElement>("#verify-status")!;
 const verifyResult = document.querySelector<HTMLDivElement>("#verify-result")!;
 
@@ -404,7 +405,7 @@ createButton.addEventListener("click", async () => {
 
 cancelButton.addEventListener("click", () => creationOperation.cancel());
 
-function renderVerifyResult(result: Awaited<ReturnType<typeof verifyProofPackage>>): void {
+function renderVerifyResult(result: Awaited<ReturnType<typeof verifyProofPackage>>, packageName: string): void {
   verifyResult.replaceChildren();
   verifyResult.className = `result-card ${result.status === "verified" ? "success" : "failure"}`;
   const title = document.createElement("h3");
@@ -415,15 +416,28 @@ function renderVerifyResult(result: Awaited<ReturnType<typeof verifyProofPackage
     "timestamp-unverified": "Timestamp could not be verified",
   } as const;
   title.textContent = titleByStatus[result.status];
+
+  const checkedFile = document.createElement("p");
+  checkedFile.className = "verify-file-name";
+  checkedFile.append("Checked: ");
+  const checkedFileName = document.createElement("code");
+  checkedFileName.textContent = packageName;
+  checkedFile.append(checkedFileName);
+
   const message = document.createElement("p");
   message.textContent = result.status === "verified" ? result.message.replace(/^Verified\.\s*/, "") : result.message;
-  verifyResult.append(title, message);
+  verifyResult.append(title, checkedFile, message);
+
   if (result.signedTime) {
+    const statement = document.createElement("p");
+    statement.className = "result-time";
+    statement.textContent = result.fileCount === 1 ? "This exact file existed by:" : "These exact files existed by:";
     const time = document.createElement("strong");
     time.className = "big-time";
     time.textContent = localDateTime(result.signedTime);
-    verifyResult.append(time);
+    verifyResult.append(statement, time);
   }
+
   if (result.details?.length) {
     const details = document.createElement("details");
     const summary = document.createElement("summary");
@@ -437,6 +451,14 @@ function renderVerifyResult(result: Awaited<ReturnType<typeof verifyProofPackage
     details.append(summary, list);
     verifyResult.append(details);
   }
+
+  const checkAnother = document.createElement("button");
+  checkAnother.type = "button";
+  checkAnother.className = "secondary-button verify-another-button";
+  checkAnother.textContent = "Check another ProofStamp";
+  checkAnother.addEventListener("click", () => verifyInput.click());
+  verifyResult.append(checkAnother);
+  verifyPicker.classList.add("hidden");
 }
 
 verifyInput.addEventListener("change", async () => {
@@ -452,15 +474,18 @@ verifyInput.addEventListener("change", async () => {
     {
       onStart: () => {
         verifyResult.classList.add("hidden");
+        verifyResult.replaceChildren();
+        verifyPicker.classList.add("hidden");
         verifyStatus.className = "status-box working";
         verifyStatus.textContent = "Checking this ProofStamp on your device…";
         verifyPanel.setAttribute("aria-busy", "true");
       },
       onSuccess: (result) => {
         verifyStatus.classList.add("hidden");
-        renderVerifyResult(result);
+        renderVerifyResult(result, file.name);
       },
       onError: (error) => {
+        verifyPicker.classList.remove("hidden");
         verifyStatus.className = "status-box error";
         verifyStatus.textContent = error instanceof Error ? error.message : "This ProofStamp could not be checked.";
       },
