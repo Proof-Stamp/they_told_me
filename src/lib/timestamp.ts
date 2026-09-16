@@ -58,15 +58,13 @@ export function derToPem(der: Uint8Array, label = "CERTIFICATE"): string {
 }
 
 export async function createTimestampRequest(data: Uint8Array): Promise<Uint8Array> {
-  const nonceBytes = crypto.getRandomValues(new Uint8Array(16));
-  nonceBytes[0] &= 0x7f;
-  if (nonceBytes.every((byte) => byte === 0)) nonceBytes[nonceBytes.length - 1] = 1;
-
+  // FreeTSA's documented RFC 3161 examples use -no_nonce, and the working
+  // ProofStamp prototype uses the same request profile. The response is still
+  // bound to the exact manifest through the SHA-256 message imprint.
   const request = new TimeStampReq({
     version: 1,
     messageImprint: await MessageImprint.create("SHA-256", asArrayBuffer(data)),
     certReq: true,
-    nonce: new asn1js.Integer({ valueHex: nonceBytes.buffer }),
   });
   return new Uint8Array(request.toSchema().toBER(false));
 }
@@ -178,7 +176,7 @@ export async function verifyTimestamp(data: Uint8Array, requestBytes: Uint8Array
   if (request.version !== 1) throw new Error("Unsupported timestamp request version.");
   if (request.messageImprint.hashAlgorithm.algorithmId !== HASH_OID_SHA256) throw new Error("Timestamp request did not use SHA-256.");
   if (response.status.status !== 0 && response.status.status !== 1) {
-    throw new Error(`Timestamp authority rejected the request with status ${response.status.status}.`);
+    throw new Error("Timestamp authority rejected this request. Try again.");
   }
 
   const signedData = parseSignedData(response);
