@@ -2,7 +2,7 @@ import { HASH_ALGORITHM, MANIFEST_VERSION, MAX_FILE_BYTES, MAX_FILES, MAX_TOTAL_
 import { sha256Hex } from "./hash";
 import type { ManifestFile, ProofManifest, SelectedFile } from "./model";
 import { throwIfAborted } from "./operation-control";
-import { crc32Bytes } from "./store-zip";
+import { crc32Bytes, rememberBlobCrc32 } from "./store-zip";
 
 const encoder = new TextEncoder();
 const SAFE_NAME_RE = /[^A-Za-z0-9._ -]+/g;
@@ -44,6 +44,7 @@ export async function buildManifest(selected: SelectedFile[], label: string, sig
     throwIfAborted(signal);
     const sha256 = await sha256Hex(fileBytes);
     const crc32 = crc32Bytes(fileBytes);
+    rememberBlobCrc32(file, crc32);
     throwIfAborted(signal);
     files.push({
       order: index + 1,
