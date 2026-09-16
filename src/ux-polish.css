@@ -16,6 +16,21 @@
   opacity: 0.64;
 }
 
+.verify-file-name {
+  margin: 0 0 12px;
+  color: var(--ps-muted);
+  font-size: 13px;
+}
+
+.verify-file-name code {
+  overflow-wrap: anywhere;
+  word-break: break-word;
+}
+
+.verify-another-button {
+  margin-top: 18px;
+}
+
 .info-section:has(.info-disclosure) {
   padding: 0;
   border-top: 1px solid var(--ps-border);
