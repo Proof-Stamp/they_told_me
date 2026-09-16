@@ -3,9 +3,12 @@ import { TimeStampReq } from "pkijs";
 import { afterEach, describe, expect, it, vi } from "vitest";
 import { HASH_OID_SHA256 } from "../src/lib/constants";
 import { equalBytes, sha256Bytes } from "../src/lib/hash";
-import { createTimestampRequest, requestFreeTsaTimestamp, verifyTimestamp } from "../src/lib/timestamp";
+import { createTimestampRequest, requestFreeTsaTimestamp, TIMESTAMP_CLIENT_TIMEOUT_MS, verifyTimestamp } from "../src/lib/timestamp";
 
-afterEach(() => vi.unstubAllGlobals());
+afterEach(() => {
+  vi.useRealTimers();
+  vi.unstubAllGlobals();
+});
 
 function bodyBytes(body: BodyInit | null | undefined): Uint8Array {
   if (!(body instanceof ArrayBuffer)) throw new Error("Expected timestamp request body to be an ArrayBuffer.");
@@ -58,6 +61,30 @@ describe("timestamp transport privacy", () => {
     vi.stubGlobal("fetch", fetchMock);
 
     await expect(requestFreeTsaTimestamp(tsq)).rejects.toThrow("through the ProofStamp relay");
+    expect(fetchMock).toHaveBeenCalledTimes(1);
+  });
+
+  it("times out a stalled relay request instead of leaving creation busy indefinitely", async () => {
+    vi.useFakeTimers();
+    const tsq = new Uint8Array([48, 3, 2, 1, 0]);
+    const fetchMock = vi.fn((_input: RequestInfo | URL, init?: RequestInit) => new Promise<Response>((_resolve, reject) => {
+      const signal = init?.signal;
+      if (!signal) {
+        reject(new Error("Expected a fetch abort signal."));
+        return;
+      }
+      if (signal.aborted) {
+        reject(new Error("simulated abort"));
+        return;
+      }
+      signal.addEventListener("abort", () => reject(new Error("simulated timeout abort")), { once: true });
+    }));
+    vi.stubGlobal("fetch", fetchMock);
+
+    const pending = requestFreeTsaTimestamp(tsq);
+    const assertion = expect(pending).rejects.toThrow("Timestamp request timed out. Try again.");
+    await vi.advanceTimersByTimeAsync(TIMESTAMP_CLIENT_TIMEOUT_MS);
+    await assertion;
     expect(fetchMock).toHaveBeenCalledTimes(1);
   });
 });
