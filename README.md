@@ -2,6 +2,8 @@
 
 Keep your own verifiable copy of what you were told.
 
+Live app: https://they-told-me.proofstamp.org
+
 They Told Me is a small browser app for preserving customer-service call recordings, chat screenshots, or a mixed set of existing files. It keeps the originals on the user's device, creates a local SHA-256 manifest, obtains an independent RFC 3161 timestamp for that manifest digest, and downloads one `.proofstamp.zip` for later verification.
 
 ## What it proves
@@ -20,7 +22,7 @@ There are no accounts, database, cloud proof history, analytics, or remote stora
 
 File contents, filenames, labels, previews, manifest generation, hashing, ZIP creation, downloads, and package verification run in the browser. Only an RFC 3161 timestamp request containing the manifest digest and protocol fields leaves the browser. The app sends that request to a bounded, stateless Cloudflare Pages Function, which forwards only the timestamp query to the fixed FreeTSA endpoint.
 
-The relay accepts only `POST application/timestamp-query`, has a small request limit, and never receives original files. The browser Content Security Policy restricts network connections to the app's own origin. Normal network metadata can still be visible to Cloudflare and FreeTSA.
+The relay accepts only `POST application/timestamp-query`, has bounded request and response sizes, and never receives original files. The browser Content Security Policy restricts network connections to the app's own origin. Normal network metadata can still be visible to Cloudflare and FreeTSA.
 
 Anyone who receives the downloaded ZIP can read the originals inside it.
 
@@ -41,6 +43,16 @@ VERIFY.txt                        independent verification instructions
 
 Original ZIP entries are stored without compression. Duplicate filenames remain distinct because the internal path includes selection order.
 
+## Architecture
+
+- Vite + TypeScript in the browser
+- Web Crypto SHA-256
+- RFC 3161 timestamps from FreeTSA
+- one stateless Cloudflare Pages Function at `/api/timestamp`
+- no database, accounts, remote file storage, or proof history
+
+The project uses JavaScript/TypeScript only. It has no Rust dependency or Rust/WASM build step.
+
 ## Development
 
 Requirements:
@@ -53,11 +65,16 @@ Use the committed dependency lockfile for reproducible installs:
 ```bash
 npm ci
 npm test
-npm run test:freetsa
 npm run build
 ```
 
-`npm run test:freetsa` is a live integration check. It sends a synthetic digest to FreeTSA and verifies the returned timestamp both in JavaScript and with the installed `openssl` CLI.
+The live FreeTSA integration check is separate because it contacts an external service:
+
+```bash
+npm run test:freetsa
+```
+
+It sends a synthetic digest to FreeTSA and verifies the returned timestamp both in JavaScript and with the installed `openssl` CLI.
 
 For local Cloudflare Pages + Functions development after installing dependencies:
 
@@ -74,22 +91,12 @@ mkdir -p .tmp && npx wrangler pages functions build functions --outfile .tmp/pag
 
 See [timestamp trust and independent verification](docs/VERIFICATION.md) and [Cloudflare Pages configuration](docs/DEPLOYMENT.md).
 
-## Public release checklist
+Before a public release, smoke-test the production flow and confirm the header links for **How it works** and **Privacy** open their corresponding disclosures, including when loading the page directly with `#how-it-works` or `#privacy`.
 
-The repository can remain private while the preview is being reviewed. Before presenting the project as open source or relying on a public source link:
+## Security
 
-- choose and commit an intentional `LICENSE` file;
-- make the repository public;
-- verify the GitHub source URL works for a signed-out visitor; and
-- only then use "open source" wording or a public source link in the product UI.
+Please report security-sensitive issues privately rather than opening a public issue. See [SECURITY.md](SECURITY.md).
 
-Repository visibility is not changed by the v1 implementation work.
+## License
 
-## Reference state used for v1
-
-The implementation was started from an empty target repository. Patterns were reviewed from:
-
-- `Proof-Stamp/emailapp` at `1cbaa6c76cb9386413676cdb800d21871b6b3a1d` for local file handling and receipt/verification ideas. Its Rust hashing path was deliberately not copied.
-- `Proof-Stamp/solana` at `b975e04062ec8addbcc71c019a4e0c6b4f1bece0` for current ProofStamp UI, accessibility, Cloudflare, testing, and engineering conventions.
-
-This project uses JavaScript/TypeScript only. It has no Rust dependency or Rust/WASM build step.
+MIT. See [LICENSE](LICENSE).

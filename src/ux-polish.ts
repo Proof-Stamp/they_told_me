@@ -73,6 +73,23 @@ function makeSectionDisclosure(section: HTMLElement, label: string): void {
   section.dataset.disclosureReady = "true";
 }
 
+function openDisclosureForHash(hash = window.location.hash): void {
+  if (!hash.startsWith("#") || hash.length < 2) return;
+  const id = decodeURIComponent(hash.slice(1));
+  const target = document.getElementById(id);
+  if (!target) return;
+  const details = target.querySelector<HTMLDetailsElement>("details.info-disclosure");
+  if (details) details.open = true;
+}
+
+function wireSectionLinks(): void {
+  document.querySelectorAll<HTMLAnchorElement>('a[href="#how-it-works"], a[href="#privacy"]').forEach((link) => {
+    link.addEventListener("click", () => openDisclosureForHash(link.hash));
+  });
+  window.addEventListener("hashchange", () => openDisclosureForHash());
+  openDisclosureForHash();
+}
+
 function addPrivacyVerification(): void {
   const banner = document.querySelector<HTMLElement>(".privacy-banner");
   const bannerStrong = banner?.querySelector<HTMLElement>("strong");
@@ -144,6 +161,7 @@ function setupUxPolish(): void {
   const privacy = document.querySelector<HTMLElement>("#privacy");
   if (howItWorks) makeSectionDisclosure(howItWorks, "How it works");
   if (privacy) makeSectionDisclosure(privacy, "Privacy");
+  wireSectionLinks();
 
   const desktopDragDrop = window.matchMedia("(hover: hover) and (pointer: fine)").matches;
   if (!desktopDragDrop || typeof DataTransfer === "undefined") return;
