@@ -1,18 +1,15 @@
 import {
   BlobReader,
-  BlobWriter,
-  TextReader,
   TextWriter,
-  Uint8ArrayReader,
   Uint8ArrayWriter,
   ZipReader,
-  ZipWriter,
 } from "@zip.js/zip.js";
 import { MAX_ARCHIVE_ENTRIES, MAX_PACKAGE_BYTES } from "./constants";
 import { sha256Hex } from "./hash";
 import { buildManifest, parseManifest, validateSelection } from "./manifest";
 import type { CreatedProof, PackageVerificationResult, ProofManifest, SelectedFile, TimestampVerification } from "./model";
 import { throwIfAborted } from "./operation-control";
+import { buildStoredZip, type StoredZipEntry } from "./store-zip";
 import { createTimestampEvidence, verifyTimestamp } from "./timestamp";
 
 const PROOF_JSON = "proof/proof.json";
@@ -57,12 +54,6 @@ function verifyInstructions(): string {
   return `They Told Me by ProofStamp — independent verification\n\nThis package contains the original files, a timestamped manifest, the RFC 3161 request/response, and public certificate copies for convenience.\n\nIMPORTANT\nChecking timestamp.tsq + timestamp.tsr alone verifies the timestamp request/response pair. It does NOT verify that the originals match proof/proof.json. Complete verification also hashes proof/proof.json and every listed original.\n\n1. Establish certificate trust independently\n\nDo not trust certificate files merely because they are inside this ZIP. Obtain tsa.crt and cacert.pem independently from FreeTSA at https://www.freetsa.org/index_en.php and compare their SHA-256 file hashes with the values FreeTSA publishes there. Use those independently obtained certificate files for the OpenSSL checks below.\n\n2. Verify the RFC 3161 timestamp with OpenSSL\n\nFrom the extracted package directory, with independently obtained cacert.pem and tsa.crt available:\n\n  openssl ts -verify -in proof/timestamp.tsr -queryfile proof/timestamp.tsq -CAfile cacert.pem -untrusted tsa.crt\n\nExpected result: Verification: OK\n\nThen verify the exact saved manifest bytes:\n\n  openssl ts -verify -in proof/timestamp.tsr -data proof/proof.json -CAfile cacert.pem -untrusted tsa.crt\n\nExpected result: Verification: OK\n\n3. Verify each original\n\nCalculate SHA-256 for every file under original/ and compare it with the exact path and SHA-256 value in proof/proof.json. On common systems:\n\n  sha256sum original/*\n\nOr on macOS:\n\n  shasum -a 256 original/*\n\nBrowser verifier trust policy\n- RFC 3161 response status, SHA-256 message imprint, and request nonce are checked.\n- The CMS timestamp signature and certificate chain are checked.\n- The exact FreeTSA TSA and root certificate DER SHA-256 fingerprints are pinned by the application.\n- Certificate validity is evaluated at the signed timestamp time.\n- The timestamping extended-key-usage is required on the TSA certificate.\n- Revocation is NOT checked by the v1 browser verifier. FreeTSA publishes OCSP/CRL information for online revocation checking.\n\nLimits\nThe proof establishes existence/integrity by the signed time. It does not establish the conversation's actual date, participants, truth, completeness, or agreement. A timestamp obtained today does not prove an earlier date shown inside a screenshot.\n`;
 }
 
-async function addBytes(writer: ZipWriter<Blob>, path: string, bytes: Uint8Array, signal?: AbortSignal): Promise<void> {
-  throwIfAborted(signal);
-  await writer.add(path, new Uint8ArrayReader(bytes), { level: 0, useWebWorkers: false });
-  throwIfAborted(signal);
-}
-
 async function buildPackageBlob(
   selected: SelectedFile[],
   manifest: ProofManifest,
@@ -71,27 +62,21 @@ async function buildPackageBlob(
   signal?: AbortSignal,
 ): Promise<Blob> {
   throwIfAborted(signal);
-  const zipWriter = new ZipWriter(new BlobWriter("application/zip"), { useWebWorkers: false });
-  for (let index = 0; index < selected.length; index += 1) {
-    throwIfAborted(signal);
-    await zipWriter.add(manifest.files[index].path, new BlobReader(selected[index].file), { level: 0, useWebWorkers: false });
-    throwIfAborted(signal);
-  }
-  await addBytes(zipWriter, PROOF_JSON, manifestBytes, signal);
-  await addBytes(zipWriter, TSQ, timestamp.request, signal);
-  await addBytes(zipWriter, TSR, timestamp.response, signal);
-  throwIfAborted(signal);
-  await zipWriter.add(TSA_CERT, new TextReader(timestamp.verification.tsaCertificatePem), { level: 0, useWebWorkers: false });
-  throwIfAborted(signal);
-  await zipWriter.add(CA_CERT, new TextReader(timestamp.verification.caCertificatePem), { level: 0, useWebWorkers: false });
-  throwIfAborted(signal);
-  await zipWriter.add(RECEIPT, new TextReader(receiptText(manifest, timestamp.verification)), { level: 0, useWebWorkers: false });
-  throwIfAborted(signal);
-  await zipWriter.add(VERIFY, new TextReader(verifyInstructions()), { level: 0, useWebWorkers: false });
-  throwIfAborted(signal);
-  const packageBlob = await zipWriter.close();
-  throwIfAborted(signal);
-  return packageBlob;
+  const encoder = new TextEncoder();
+  const entries: StoredZipEntry[] = selected.map((item, index) => ({
+    name: manifest.files[index].path,
+    data: item.file,
+  }));
+  entries.push(
+    { name: PROOF_JSON, data: manifestBytes },
+    { name: TSQ, data: timestamp.request },
+    { name: TSR, data: timestamp.response },
+    { name: TSA_CERT, data: encoder.encode(timestamp.verification.tsaCertificatePem) },
+    { name: CA_CERT, data: encoder.encode(timestamp.verification.caCertificatePem) },
+    { name: RECEIPT, data: encoder.encode(receiptText(manifest, timestamp.verification)) },
+    { name: VERIFY, data: encoder.encode(verifyInstructions()) },
+  );
+  return buildStoredZip(entries, signal);
 }
 
 export async function createProofPackage(
@@ -138,7 +123,6 @@ async function readBytes(entry: EntryLike): Promise<Uint8Array> {
     checkCrc32: true,
     checkOverlappingEntry: true,
     strictness: "strict",
-    useWebWorkers: false,
   });
   if (!(value instanceof Uint8Array)) throw new Error(`Could not read ${entry.filename}.`);
   return value;
@@ -150,7 +134,6 @@ async function readText(entry: EntryLike): Promise<string> {
     checkCrc32: true,
     checkOverlappingEntry: true,
     strictness: "strict",
-    useWebWorkers: false,
   });
   if (typeof value !== "string") throw new Error(`Could not read ${entry.filename}.`);
   return value;
@@ -169,7 +152,6 @@ export async function verifyProofPackage(blob: Blob, timestampVerifier: Timestam
     strictness: "strict",
     checkCrc32: true,
     checkOverlappingEntry: true,
-    useWebWorkers: false,
   });
 
   try {
