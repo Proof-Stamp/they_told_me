@@ -93,6 +93,36 @@ function addPrivacyVerification(): void {
   privacy.append(check);
 }
 
+function simplifyCreatedResult(): void {
+  const result = document.querySelector<HTMLElement>("#created-result");
+  if (!result || result.classList.contains("hidden")) return;
+
+  const download = result.querySelector<HTMLAnchorElement>(".download-button");
+  if (!download) return;
+
+  const signedStatement = result.querySelector<HTMLElement>(".result-time");
+  const explanation = download.previousElementSibling;
+  if (explanation instanceof HTMLParagraphElement) {
+    const singleFile = signedStatement?.textContent?.startsWith("This file") ?? false;
+    explanation.textContent = singleFile
+      ? "Download one ZIP containing your original file and its proof."
+      : "Download one ZIP containing your original files and their proof.";
+  }
+
+  result.querySelector(".download-note")?.remove();
+  result.querySelectorAll<HTMLDetailsElement>("details").forEach((details) => {
+    details.open = false;
+  });
+}
+
+function watchCreatedResult(): void {
+  const result = document.querySelector<HTMLElement>("#created-result");
+  if (!result) return;
+  const observer = new MutationObserver(() => simplifyCreatedResult());
+  observer.observe(result, { childList: true, subtree: true, attributes: true, attributeFilter: ["class"] });
+  simplifyCreatedResult();
+}
+
 function setupUxPolish(): void {
   const heroCopy = document.querySelector<HTMLElement>(".hero-copy");
   if (heroCopy) {
@@ -100,6 +130,7 @@ function setupUxPolish(): void {
   }
 
   addPrivacyVerification();
+  watchCreatedResult();
 
   const howItWorks = document.querySelector<HTMLElement>("#how-it-works");
   const privacy = document.querySelector<HTMLElement>("#privacy");
