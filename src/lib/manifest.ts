@@ -31,11 +31,10 @@ export function validateSelection(selected: SelectedFile[]): void {
   if (total > MAX_TOTAL_BYTES) throw new Error("The selected files are larger than the total size limit.");
 }
 
-export async function buildManifest(selected: SelectedFile[], label: string, signal?: AbortSignal): Promise<{ manifest: ProofManifest; bytes: Uint8Array; fileCrc32: number[] }> {
+export async function buildManifest(selected: SelectedFile[], label: string, signal?: AbortSignal): Promise<{ manifest: ProofManifest; bytes: Uint8Array }> {
   validateSelection(selected);
   throwIfAborted(signal);
   const files: ManifestFile[] = [];
-  const fileCrc32: number[] = [];
 
   for (let index = 0; index < selected.length; index += 1) {
     throwIfAborted(signal);
@@ -54,7 +53,6 @@ export async function buildManifest(selected: SelectedFile[], label: string, sig
       mediaType: file.type || "application/octet-stream",
       sha256,
     });
-    fileCrc32.push(crc32);
   }
 
   const trimmedLabel = label.trim().slice(0, 120);
@@ -67,7 +65,7 @@ export async function buildManifest(selected: SelectedFile[], label: string, sig
   };
   const bytes = encoder.encode(`${JSON.stringify(manifest, null, 2)}\n`);
   throwIfAborted(signal);
-  return { manifest, bytes, fileCrc32 };
+  return { manifest, bytes };
 }
 
 export function parseManifest(bytes: Uint8Array): ProofManifest {
