@@ -1,0 +1,53 @@
+.keep-handy {
+  margin-top: 22px;
+  padding-top: 18px;
+  border-top: 1px solid var(--ps-border);
+}
+
+.keep-handy > strong {
+  display: block;
+  color: var(--ps-blue);
+  font-size: 15px;
+}
+
+.keep-handy > p {
+  margin: 6px 0 0;
+  color: var(--ps-muted);
+  font-size: 13px;
+  line-height: 1.5;
+}
+
+.keep-handy .keep-handy-reminder {
+  color: var(--ps-graphite);
+}
+
+.keep-handy-details {
+  margin-top: 10px;
+}
+
+.keep-handy-details > summary {
+  display: inline-block;
+  min-height: 44px;
+  padding: 11px 0;
+  color: var(--ps-blue);
+  font-weight: 650;
+  cursor: pointer;
+}
+
+.keep-handy-instructions {
+  margin-top: 2px;
+  padding: 12px 14px;
+  border-radius: 9px;
+  background: var(--ps-surface);
+}
+
+.keep-handy-instructions p {
+  margin: 0;
+  color: var(--ps-muted);
+  font-size: 13px;
+  line-height: 1.5;
+}
+
+.keep-handy-instructions p + p {
+  margin-top: 8px;
+}
