@@ -19,6 +19,18 @@ Environment variables:   none
 
 The Pages Function source is `functions/api/timestamp.ts`, which maps to `/api/timestamp`. It is intentionally stateless and restricted to bounded RFC 3161 timestamp-query POST requests forwarded to the fixed FreeTSA endpoint. Request and upstream response size limits are enforced while streams are read, so a missing `Content-Length` header does not allow an oversized body to be buffered first.
 
+## Production and previews
+
+The stable production hostname is:
+
+```text
+https://they-told-me.proofstamp.org
+```
+
+Cloudflare Pages branch and commit previews use temporary `*.they-told-me.pages.dev` addresses. Product copy that invites a user to bookmark or add the app to a home screen is intentionally restricted to the stable production hostname.
+
+Do not treat a temporary preview URL as the production address.
+
 ## Local Pages runtime
 
 After dependencies are installed with `npm ci`:
@@ -38,10 +50,6 @@ mkdir -p .tmp && npx wrangler pages functions build functions --outfile .tmp/pag
 
 The CI workflow runs this command without deploying anything.
 
-## Project name and production domain
-
-A Cloudflare Pages project name and production domain are intentionally not hard-coded here because they have not been established by this repository. Add or download a Wrangler configuration only after the real Pages project exists, rather than inventing production settings.
-
 ## Network behavior
 
 Creation posts one small RFC 3161 timestamp query to the same-origin `/api/timestamp` route. The Pages Function forwards only that query to the fixed FreeTSA endpoint. Original file bytes, filenames, labels, previews, the manifest, and the ZIP are not sent by the application.
@@ -50,4 +58,4 @@ The browser Content Security Policy restricts `connect-src` to the app's own ori
 
 ## Deployment boundary
 
-This repository prepares and tests build output. Production deployment is intentionally outside the implementation task. Do not run `wrangler pages deploy` as part of routine tests.
+Routine tests build the Pages output but do not run `wrangler pages deploy`. Production deployment should remain an explicit release action through the configured Cloudflare Pages project.
