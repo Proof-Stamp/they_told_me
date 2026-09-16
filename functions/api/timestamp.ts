@@ -16,6 +16,12 @@ function plain(message: string, status: number): Response {
   });
 }
 
+function toArrayBuffer(bytes: Uint8Array): ArrayBuffer {
+  const copy = new Uint8Array(bytes.byteLength);
+  copy.set(bytes);
+  return copy.buffer;
+}
+
 function declaredLengthTooLarge(headers: Headers, maximum: number): boolean {
   const raw = headers.get("content-length");
   if (raw === null) return false;
@@ -72,7 +78,7 @@ export async function onRequestPost(context: PagesContext): Promise<Response> {
         "Content-Type": "application/timestamp-query",
         Accept: "application/timestamp-reply, application/octet-stream",
       },
-      body,
+      body: toArrayBuffer(body),
       redirect: "manual",
       signal: controller.signal,
     });
@@ -85,7 +91,7 @@ export async function onRequestPost(context: PagesContext): Promise<Response> {
     if (responseBody === null || responseBody.byteLength === 0) {
       return plain("Timestamp authority returned an invalid response size.", 502);
     }
-    return new Response(responseBody, {
+    return new Response(toArrayBuffer(responseBody), {
       status: 200,
       headers: {
         "Content-Type": "application/timestamp-reply",
