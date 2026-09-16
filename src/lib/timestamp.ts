@@ -26,6 +26,15 @@ export interface TimestampEvidence {
   verification: TimestampVerification;
 }
 
+export const TIMESTAMP_CLIENT_TIMEOUT_MS = 20_000;
+
+class TimestampTimeoutError extends Error {
+  constructor(options?: ErrorOptions) {
+    super("Timestamp request timed out. Try again.", options);
+    this.name = "TimestampTimeoutError";
+  }
+}
+
 function asArrayBuffer(bytes: Uint8Array): ArrayBuffer {
   const copy = new Uint8Array(bytes.byteLength);
   copy.set(bytes);
@@ -64,24 +73,43 @@ export async function createTimestampRequest(data: Uint8Array): Promise<Uint8Arr
 
 async function postTimestamp(url: string, request: Uint8Array, signal?: AbortSignal): Promise<Uint8Array> {
   throwIfAborted(signal);
-  const response = await fetch(url, {
-    method: "POST",
-    headers: {
-      "Content-Type": "application/timestamp-query",
-      Accept: "application/timestamp-reply, application/octet-stream",
-    },
-    body: asArrayBuffer(request),
-    cache: "no-store",
-    credentials: "omit",
-    referrerPolicy: "no-referrer",
-    signal,
-  });
-  throwIfAborted(signal);
-  if (!response.ok) throw new Error(`Timestamp service returned HTTP ${response.status}.`);
-  const bytes = new Uint8Array(await response.arrayBuffer());
-  throwIfAborted(signal);
-  if (bytes.length === 0) throw new Error("Timestamp service returned an empty response.");
-  return bytes;
+
+  const controller = new AbortController();
+  let timedOut = false;
+  const abortFromCaller = () => controller.abort();
+  signal?.addEventListener("abort", abortFromCaller, { once: true });
+  const timer = setTimeout(() => {
+    timedOut = true;
+    controller.abort();
+  }, TIMESTAMP_CLIENT_TIMEOUT_MS);
+
+  try {
+    const response = await fetch(url, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/timestamp-query",
+        Accept: "application/timestamp-reply, application/octet-stream",
+      },
+      body: asArrayBuffer(request),
+      cache: "no-store",
+      credentials: "omit",
+      referrerPolicy: "no-referrer",
+      signal: controller.signal,
+    });
+    throwIfAborted(signal);
+    if (!response.ok) throw new Error(`Timestamp service returned HTTP ${response.status}.`);
+    const bytes = new Uint8Array(await response.arrayBuffer());
+    throwIfAborted(signal);
+    if (bytes.length === 0) throw new Error("Timestamp service returned an empty response.");
+    return bytes;
+  } catch (error) {
+    if (signal?.aborted) throw error;
+    if (timedOut) throw new TimestampTimeoutError({ cause: error });
+    throw error;
+  } finally {
+    clearTimeout(timer);
+    signal?.removeEventListener("abort", abortFromCaller);
+  }
 }
 
 export async function requestFreeTsaTimestamp(request: Uint8Array, signal?: AbortSignal): Promise<{ bytes: Uint8Array; transport: "direct" | "relay" }> {
@@ -89,6 +117,7 @@ export async function requestFreeTsaTimestamp(request: Uint8Array, signal?: Abor
     return { bytes: await postTimestamp("/api/timestamp", request, signal), transport: "relay" };
   } catch (relayError) {
     if (signal?.aborted) throw relayError;
+    if (relayError instanceof TimestampTimeoutError) throw relayError;
     throw new Error("Could not reach the timestamp authority through the ProofStamp relay.", { cause: relayError });
   }
 }
