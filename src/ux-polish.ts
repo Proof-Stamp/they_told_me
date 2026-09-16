@@ -1,5 +1,7 @@
 import "./ux-polish.css";
 
+const REPOSITORY_URL = "https://github.com/Proof-Stamp/they_told_me";
+
 function assignDroppedFiles(input: HTMLInputElement, files: File[]): void {
   if (input.disabled) return;
   const transfer = new DataTransfer();
@@ -100,6 +102,14 @@ function addPrivacyVerification(): void {
   const privacy = document.querySelector<HTMLElement>("#privacy");
   if (!privacy || privacy.querySelector(".privacy-check")) return;
 
+  const source = document.createElement("p");
+  source.append("The source code for this app is public on ");
+  const sourceLink = document.createElement("a");
+  sourceLink.href = REPOSITORY_URL;
+  sourceLink.textContent = "GitHub";
+  sourceLink.title = "View the They Told Me source code on GitHub";
+  source.append(sourceLink, ".");
+
   const check = document.createElement("div");
   check.className = "privacy-check";
   const title = document.createElement("strong");
@@ -107,7 +117,7 @@ function addPrivacyVerification(): void {
   const copy = document.createElement("p");
   copy.textContent = "Open your browser’s Network tools while creating a ProofStamp. You should see only the small timestamp request leave this page, not your files, filenames, label, manifest, previews, or completed ZIP.";
   check.append(title, copy);
-  privacy.append(check);
+  privacy.append(source, check);
 }
 
 function simplifyCreatedResult(): void {

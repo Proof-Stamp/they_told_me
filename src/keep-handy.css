@@ -62,6 +62,19 @@
   color: var(--ps-muted);
 }
 
+.footer-repository-link {
+  color: var(--ps-muted);
+  font-weight: 500;
+  text-decoration: none;
+}
+
+.footer-repository-link:hover,
+.footer-repository-link:focus-visible {
+  color: var(--ps-blue);
+  text-decoration: underline;
+  text-underline-offset: 2px;
+}
+
 @media (max-width: 640px) {
   .footer-meta {
     width: 100%;
