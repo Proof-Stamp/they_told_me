@@ -3,6 +3,7 @@ import { throwIfAborted } from "./operation-control";
 export interface StoredZipEntry {
   name: string;
   data: Blob | Uint8Array;
+  crc32?: number;
 }
 
 const UTF8_FLAG = 0x0800;
@@ -20,10 +21,14 @@ for (let value = 0; value < 256; value += 1) {
   CRC32_TABLE[value] = crc >>> 0;
 }
 
-function updateCrc32(crc: number, bytes: Uint8Array): number {
+export function updateCrc32(crc: number, bytes: Uint8Array): number {
   let next = crc;
   for (const byte of bytes) next = CRC32_TABLE[(next ^ byte) & 0xff] ^ (next >>> 8);
   return next >>> 0;
+}
+
+export function crc32Bytes(bytes: Uint8Array): number {
+  return (updateCrc32(0xffffffff, bytes) ^ 0xffffffff) >>> 0;
 }
 
 async function crc32(data: Blob | Uint8Array, signal?: AbortSignal): Promise<number> {
@@ -31,9 +36,8 @@ async function crc32(data: Blob | Uint8Array, signal?: AbortSignal): Promise<num
   let crc = 0xffffffff;
 
   if (data instanceof Uint8Array) {
-    crc = updateCrc32(crc, data);
     throwIfAborted(signal);
-    return (crc ^ 0xffffffff) >>> 0;
+    return crc32Bytes(data);
   }
 
   const reader = data.stream().getReader();
@@ -137,7 +141,7 @@ export async function buildStoredZip(entries: StoredZipEntry[], signal?: AbortSi
     if (!nameBytes.byteLength || nameBytes.byteLength > MAX_UINT16) throw new Error("ZIP entry name is invalid or too long.");
     if (size > MAX_UINT32 || localOffset > MAX_UINT32) throw new Error("ZIP64 is not supported by this ProofStamp package writer.");
 
-    const crc = await crc32(entry.data, signal);
+    const crc = entry.crc32 ?? await crc32(entry.data, signal);
     const header = localHeader(nameBytes, size, crc);
     const central = centralHeader(nameBytes, size, crc, localOffset);
 
