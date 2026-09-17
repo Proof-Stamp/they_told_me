@@ -157,6 +157,33 @@ function simplifyFooter(): void {
   if (footerCopy) footerCopy.textContent = "Proof of existence and integrity.";
 }
 
+function strengthenCreatePicker(desktopDragDrop: boolean): void {
+  const picker = document.querySelector<HTMLElement>("#create-panel .file-picker");
+  const title = document.querySelector<HTMLElement>("#file-picker-title");
+  const hint = document.querySelector<HTMLElement>("#file-picker-hint");
+  const selectionWrap = document.querySelector<HTMLElement>("#selection-wrap");
+  if (!picker || !title || !hint || !selectionWrap) return;
+
+  let cta = picker.querySelector<HTMLElement>(".file-picker-cta");
+  if (!cta) {
+    cta = document.createElement("span");
+    cta.className = "file-picker-cta";
+    cta.setAttribute("aria-hidden", "true");
+    picker.insertBefore(cta, hint);
+  }
+
+  const syncCopy = () => {
+    const hasFiles = !selectionWrap.classList.contains("hidden");
+    title.textContent = hasFiles ? "Add more recordings or screenshots" : "Add your recordings or screenshots";
+    cta!.textContent = hasFiles ? "Choose more files" : "Choose files";
+    hint.textContent = desktopDragDrop ? "or drag them here" : "You can add more than one file.";
+  };
+
+  const observer = new MutationObserver(syncCopy);
+  observer.observe(selectionWrap, { attributes: true, attributeFilter: ["class"] });
+  syncCopy();
+}
+
 function setupUxPolish(): void {
   const heroCopy = document.querySelector<HTMLElement>(".hero-copy");
   if (heroCopy) {
@@ -174,13 +201,13 @@ function setupUxPolish(): void {
   wireSectionLinks();
 
   const desktopDragDrop = window.matchMedia("(hover: hover) and (pointer: fine)").matches;
+  strengthenCreatePicker(desktopDragDrop);
+
   if (!desktopDragDrop || typeof DataTransfer === "undefined") return;
 
   const createInput = document.querySelector<HTMLInputElement>("#create-files");
   const createPicker = createInput?.closest<HTMLElement>(".file-picker");
-  const createHint = document.querySelector<HTMLElement>("#file-picker-hint");
   if (createInput && createPicker) {
-    if (createHint) createHint.textContent = "Choose files or drag them here.";
     enableDropZone(createPicker, createInput, true);
   }
 
