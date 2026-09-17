@@ -184,6 +184,25 @@ function strengthenCreatePicker(desktopDragDrop: boolean): void {
   syncCopy();
 }
 
+function strengthenVerifyPicker(desktopDragDrop: boolean): void {
+  const picker = document.querySelector<HTMLElement>("#verify-panel .file-picker");
+  const title = picker?.querySelector<HTMLElement>(".file-picker-title");
+  const hint = picker?.querySelector<HTMLElement>("span:not(.file-picker-title)");
+  if (!picker || !title || !hint) return;
+
+  let cta = picker.querySelector<HTMLElement>(".file-picker-cta");
+  if (!cta) {
+    cta = document.createElement("span");
+    cta.className = "file-picker-cta";
+    cta.setAttribute("aria-hidden", "true");
+    picker.insertBefore(cta, hint);
+  }
+
+  title.textContent = "Add your ProofStamp ZIP";
+  cta.textContent = "Choose ZIP";
+  hint.textContent = desktopDragDrop ? "or drag it here" : "Choose one ZIP file.";
+}
+
 function setupUxPolish(): void {
   const heroCopy = document.querySelector<HTMLElement>(".hero-copy");
   if (heroCopy) {
@@ -202,6 +221,7 @@ function setupUxPolish(): void {
 
   const desktopDragDrop = window.matchMedia("(hover: hover) and (pointer: fine)").matches;
   strengthenCreatePicker(desktopDragDrop);
+  strengthenVerifyPicker(desktopDragDrop);
 
   if (!desktopDragDrop || typeof DataTransfer === "undefined") return;
 
@@ -213,9 +233,7 @@ function setupUxPolish(): void {
 
   const verifyInput = document.querySelector<HTMLInputElement>("#verify-file");
   const verifyPicker = verifyInput?.closest<HTMLElement>(".file-picker");
-  const verifyHint = verifyPicker?.querySelector<HTMLElement>("span:not(.file-picker-title)");
   if (verifyInput && verifyPicker) {
-    if (verifyHint) verifyHint.textContent = "Choose a ZIP or drag it here.";
     enableDropZone(verifyPicker, verifyInput, false);
   }
 }
