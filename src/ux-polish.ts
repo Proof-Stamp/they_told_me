@@ -158,11 +158,16 @@ function simplifyFooter(): void {
 }
 
 function strengthenCreatePicker(desktopDragDrop: boolean): void {
-  const picker = document.querySelector<HTMLElement>("#create-panel .file-picker");
+  const panel = document.querySelector<HTMLElement>("#create-panel");
+  const picker = panel?.querySelector<HTMLElement>(".file-picker");
   const title = document.querySelector<HTMLElement>("#file-picker-title");
   const hint = document.querySelector<HTMLElement>("#file-picker-hint");
+  const intro = panel?.querySelector<HTMLElement>(".card-heading p");
   const selectionWrap = document.querySelector<HTMLElement>("#selection-wrap");
   if (!picker || !title || !hint || !selectionWrap) return;
+
+  if (intro) intro.textContent = "Add a call recording, screenshots, or both.";
+  title.hidden = true;
 
   let cta = picker.querySelector<HTMLElement>(".file-picker-cta");
   if (!cta) {
@@ -174,9 +179,10 @@ function strengthenCreatePicker(desktopDragDrop: boolean): void {
 
   const syncCopy = () => {
     const hasFiles = !selectionWrap.classList.contains("hidden");
-    title.textContent = hasFiles ? "Add more recordings or screenshots" : "Add your recordings or screenshots";
     cta!.textContent = hasFiles ? "Choose more files" : "Choose files";
-    hint.textContent = desktopDragDrop ? "or drag them here" : "You can add more than one file.";
+    hint.textContent = desktopDragDrop
+      ? hasFiles ? "or drag more files here" : "or drag them here"
+      : hasFiles ? "Add more if needed." : "You can add more than one file.";
   };
 
   const observer = new MutationObserver(syncCopy);
