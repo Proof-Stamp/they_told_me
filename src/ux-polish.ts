@@ -157,6 +157,41 @@ function simplifyFooter(): void {
   if (footerCopy) footerCopy.textContent = "Proof of existence and integrity.";
 }
 
+function strengthenCreatePicker(desktopDragDrop: boolean): void {
+  const input = document.querySelector<HTMLInputElement>("#create-files");
+  const picker = input?.closest<HTMLElement>(".file-picker");
+  const title = document.querySelector<HTMLElement>("#file-picker-title");
+  const hint = document.querySelector<HTMLElement>("#file-picker-hint");
+  const selectionWrap = document.querySelector<HTMLElement>("#selection-wrap");
+  if (!input || !picker || !title || !hint) return;
+
+  let cta = picker.querySelector<HTMLElement>(".file-picker-cta");
+  if (!cta) {
+    cta = document.createElement("span");
+    cta.className = "file-picker-cta";
+    title.insertAdjacentElement("afterend", cta);
+  }
+
+  const syncCopy = (): void => {
+    const hasFiles = selectionWrap ? !selectionWrap.classList.contains("hidden") : false;
+    const desiredTitle = hasFiles ? "Add more recordings or screenshots" : "Add your recordings or screenshots";
+    const desiredCta = hasFiles ? "Choose more files" : "Choose files";
+    const desiredHint = desktopDragDrop
+      ? hasFiles ? "or drag more files here" : "or drag them here"
+      : hasFiles ? "Add more if needed." : "You can add more than one file.";
+
+    if (title.textContent !== desiredTitle) title.textContent = desiredTitle;
+    if (cta.textContent !== desiredCta) cta.textContent = desiredCta;
+    if (hint.textContent !== desiredHint) hint.textContent = desiredHint;
+  };
+
+  const observer = new MutationObserver(() => queueMicrotask(syncCopy));
+  observer.observe(title, { childList: true, characterData: true, subtree: true });
+  observer.observe(hint, { childList: true, characterData: true, subtree: true });
+  if (selectionWrap) observer.observe(selectionWrap, { attributes: true, attributeFilter: ["class"] });
+  syncCopy();
+}
+
 function setupUxPolish(): void {
   const heroCopy = document.querySelector<HTMLElement>(".hero-copy");
   if (heroCopy) {
@@ -174,13 +209,13 @@ function setupUxPolish(): void {
   wireSectionLinks();
 
   const desktopDragDrop = window.matchMedia("(hover: hover) and (pointer: fine)").matches;
+  strengthenCreatePicker(desktopDragDrop);
+
   if (!desktopDragDrop || typeof DataTransfer === "undefined") return;
 
   const createInput = document.querySelector<HTMLInputElement>("#create-files");
   const createPicker = createInput?.closest<HTMLElement>(".file-picker");
-  const createHint = document.querySelector<HTMLElement>("#file-picker-hint");
   if (createInput && createPicker) {
-    if (createHint) createHint.textContent = "Choose files or drag them here.";
     enableDropZone(createPicker, createInput, true);
   }
 
