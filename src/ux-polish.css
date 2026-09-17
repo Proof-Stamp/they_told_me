@@ -16,17 +16,20 @@
   opacity: 0.64;
 }
 
-#create-panel .file-picker {
+#create-panel .file-picker,
+#verify-panel .file-picker {
   gap: 0;
 }
 
-#create-panel .file-picker-title {
+#create-panel .file-picker-title,
+#verify-panel .file-picker-title {
   color: var(--ps-graphite);
   font-size: 16px;
   font-weight: 700;
 }
 
-#create-panel .file-picker-cta {
+#create-panel .file-picker-cta,
+#verify-panel .file-picker-cta {
   display: inline-flex;
   align-items: center;
   justify-content: center;
@@ -43,12 +46,14 @@
   line-height: 1.2;
 }
 
-#create-panel .file-picker:hover .file-picker-cta {
+#create-panel .file-picker:hover .file-picker-cta,
+#verify-panel .file-picker:hover .file-picker-cta {
   border-color: var(--ps-blue-hover);
   background: var(--ps-blue-hover);
 }
 
-#create-panel #file-picker-hint {
+#create-panel #file-picker-hint,
+#verify-panel .file-picker-cta + span {
   margin-top: 8px;
 }
 
@@ -171,7 +176,8 @@
     margin-bottom: 14px;
   }
 
-  #create-panel .file-picker-cta {
+  #create-panel .file-picker-cta,
+  #verify-panel .file-picker-cta {
     width: min(100%, 240px);
   }
 
