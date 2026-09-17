@@ -157,6 +157,57 @@ function simplifyFooter(): void {
   if (footerCopy) footerCopy.textContent = "Proof of existence and integrity.";
 }
 
+function strengthenCreatePicker(desktopDragDrop: boolean): void {
+  const panel = document.querySelector<HTMLElement>("#create-panel");
+  const picker = panel?.querySelector<HTMLElement>(".file-picker");
+  const title = document.querySelector<HTMLElement>("#file-picker-title");
+  const hint = document.querySelector<HTMLElement>("#file-picker-hint");
+  const intro = panel?.querySelector<HTMLElement>(".card-heading p");
+  const selectionWrap = document.querySelector<HTMLElement>("#selection-wrap");
+  if (!picker || !title || !hint || !selectionWrap) return;
+
+  if (intro) intro.textContent = "Add a call recording, screenshots, or both.";
+  title.hidden = true;
+
+  let cta = picker.querySelector<HTMLElement>(".file-picker-cta");
+  if (!cta) {
+    cta = document.createElement("span");
+    cta.className = "file-picker-cta";
+    cta.setAttribute("aria-hidden", "true");
+    picker.insertBefore(cta, hint);
+  }
+
+  const syncCopy = () => {
+    const hasFiles = !selectionWrap.classList.contains("hidden");
+    cta!.textContent = hasFiles ? "Choose more files" : "Choose files";
+    hint.textContent = desktopDragDrop
+      ? hasFiles ? "or drag more files here" : "or drag them here"
+      : hasFiles ? "Add more if needed." : "You can add more than one file.";
+  };
+
+  const observer = new MutationObserver(syncCopy);
+  observer.observe(selectionWrap, { attributes: true, attributeFilter: ["class"] });
+  syncCopy();
+}
+
+function strengthenVerifyPicker(desktopDragDrop: boolean): void {
+  const panel = document.querySelector<HTMLElement>("#verify-panel");
+  const picker = panel?.querySelector<HTMLElement>(".file-picker");
+  const title = picker?.querySelector<HTMLElement>(".file-picker-title");
+  const hint = picker?.querySelector<HTMLElement>("span:not(.file-picker-title)");
+  const intro = panel?.querySelector<HTMLElement>(".card-heading p");
+  if (!picker || !title || !hint) return;
+
+  const redundantCta = picker.querySelector<HTMLElement>(".file-picker-cta");
+  redundantCta?.remove();
+
+  if (intro) intro.textContent = "Everything is checked on this device.";
+  title.textContent = "Choose ProofStamp ZIP";
+  title.classList.add("file-picker-cta");
+  title.removeAttribute("aria-hidden");
+  hint.textContent = desktopDragDrop ? "or drag it here" : "Choose one ZIP file.";
+}
+
 function setupUxPolish(): void {
   const heroCopy = document.querySelector<HTMLElement>(".hero-copy");
   if (heroCopy) {
@@ -174,21 +225,20 @@ function setupUxPolish(): void {
   wireSectionLinks();
 
   const desktopDragDrop = window.matchMedia("(hover: hover) and (pointer: fine)").matches;
+  strengthenCreatePicker(desktopDragDrop);
+  strengthenVerifyPicker(desktopDragDrop);
+
   if (!desktopDragDrop || typeof DataTransfer === "undefined") return;
 
   const createInput = document.querySelector<HTMLInputElement>("#create-files");
   const createPicker = createInput?.closest<HTMLElement>(".file-picker");
-  const createHint = document.querySelector<HTMLElement>("#file-picker-hint");
   if (createInput && createPicker) {
-    if (createHint) createHint.textContent = "Choose files or drag them here.";
     enableDropZone(createPicker, createInput, true);
   }
 
   const verifyInput = document.querySelector<HTMLInputElement>("#verify-file");
   const verifyPicker = verifyInput?.closest<HTMLElement>(".file-picker");
-  const verifyHint = verifyPicker?.querySelector<HTMLElement>("span:not(.file-picker-title)");
   if (verifyInput && verifyPicker) {
-    if (verifyHint) verifyHint.textContent = "Choose a ZIP or drag it here.";
     enableDropZone(verifyPicker, verifyInput, false);
   }
 }
