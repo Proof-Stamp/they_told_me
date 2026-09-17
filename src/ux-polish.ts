@@ -185,21 +185,20 @@ function strengthenCreatePicker(desktopDragDrop: boolean): void {
 }
 
 function strengthenVerifyPicker(desktopDragDrop: boolean): void {
-  const picker = document.querySelector<HTMLElement>("#verify-panel .file-picker");
+  const panel = document.querySelector<HTMLElement>("#verify-panel");
+  const picker = panel?.querySelector<HTMLElement>(".file-picker");
   const title = picker?.querySelector<HTMLElement>(".file-picker-title");
   const hint = picker?.querySelector<HTMLElement>("span:not(.file-picker-title)");
+  const intro = panel?.querySelector<HTMLElement>(".card-heading p");
   if (!picker || !title || !hint) return;
 
-  let cta = picker.querySelector<HTMLElement>(".file-picker-cta");
-  if (!cta) {
-    cta = document.createElement("span");
-    cta.className = "file-picker-cta";
-    cta.setAttribute("aria-hidden", "true");
-    picker.insertBefore(cta, hint);
-  }
+  const redundantCta = picker.querySelector<HTMLElement>(".file-picker-cta");
+  redundantCta?.remove();
 
-  title.textContent = "Add your ProofStamp ZIP";
-  cta.textContent = "Choose ZIP";
+  if (intro) intro.textContent = "Everything is checked on this device.";
+  title.textContent = "Choose ProofStamp ZIP";
+  title.classList.add("file-picker-cta");
+  title.removeAttribute("aria-hidden");
   hint.textContent = desktopDragDrop ? "or drag it here" : "Choose one ZIP file.";
 }
 
