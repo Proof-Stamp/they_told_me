@@ -126,7 +126,7 @@ app.innerHTML = `
     </section>
   </main>
 
-  <footer><span>They Told Me by ProofStamp</span><span>Proof of existence and integrity. Not proof of truth.</span></footer>
+  <footer><span>They Told Me by <a href="https://proofstamp.org/">ProofStamp</a></span><span>Proof of existence and integrity. Not proof of truth.</span></footer>
 `;
 
 const createMode = document.querySelector<HTMLButtonElement>("#create-mode")!;
