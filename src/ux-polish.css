@@ -149,31 +149,72 @@
 
 @media (max-width: 640px) {
   main {
-    padding-top: 28px;
+    padding-top: 20px;
   }
 
   .hero {
-    margin-bottom: 18px;
+    margin-bottom: 14px;
   }
 
   h1 {
-    font-size: clamp(32px, 9vw, 38px);
-    line-height: 1.02;
+    font-size: clamp(30px, 8.5vw, 36px);
+    line-height: 1.03;
   }
 
   .hero-copy {
-    margin-top: 14px;
-    font-size: 16px;
-    line-height: 1.45;
+    margin-top: 10px;
+    font-size: 15px;
+    line-height: 1.4;
   }
 
   .privacy-banner {
-    margin-bottom: 14px;
-    padding: 14px;
+    gap: 9px;
+    margin-bottom: 8px;
+    padding: 11px 12px;
+  }
+
+  .privacy-marker {
+    width: 22px;
+    height: 22px;
+    flex-basis: 22px;
+  }
+
+  .privacy-banner strong {
+    font-size: 13px;
+  }
+
+  .privacy-banner span {
+    font-size: 12px;
   }
 
   .mode-switch {
-    margin-bottom: 14px;
+    margin: -2px 0 8px;
+  }
+
+  .tool-card {
+    padding-top: 18px;
+  }
+
+  .card-heading h2 {
+    font-size: 22px;
+  }
+
+  .card-heading p {
+    font-size: 15px;
+  }
+
+  #create-panel .limit-note {
+    margin-bottom: 12px;
+  }
+
+  .file-picker {
+    min-height: 96px;
+    padding: 16px 14px;
+  }
+
+  #create-panel .file-picker-cta,
+  #verify-panel .file-picker-cta {
+    margin-top: 10px;
   }
 
   #create-panel .file-picker-cta,
