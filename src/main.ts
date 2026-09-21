@@ -23,22 +23,21 @@ app.innerHTML = `
 
   <main id="top">
     <section class="hero" aria-labelledby="hero-title">
-      <p class="eyebrow">Your copy. Your proof.</p>
-      <h1 id="hero-title">Keep your own verifiable copy of what you were told.</h1>
-      <p class="hero-copy">Save a call recording, chat screenshot, or both. Add an independent time you can check later.</p>
+      <h1 id="hero-title">Keep proof of what you were told.</h1>
+      <p class="hero-copy">Save a call recording or screenshot. Add independent proof the exact file existed by a specific time.</p>
     </section>
 
     <section class="privacy-banner" aria-label="Privacy">
       <img class="privacy-marker" src="/proof-point-card-marker.svg" alt="" aria-hidden="true" />
       <div>
-        <strong>Your recordings and screenshots stay on this device.</strong>
-        <span>Only a small timestamp request leaves your browser.</span>
+        <strong>Your files stay on this device.</strong>
+        <span>Only a timestamp request leaves your browser.</span>
       </div>
     </section>
 
     <div class="mode-switch" aria-label="Choose a task">
       <button id="create-mode" class="active" type="button" aria-pressed="true" aria-controls="create-panel">Create ProofStamp</button>
-      <button id="verify-mode" type="button" aria-pressed="false" aria-controls="verify-panel">Check ProofStamp</button>
+      <button id="verify-mode" type="button" aria-pressed="false" aria-controls="verify-panel">Check a ProofStamp</button>
     </div>
 
     <section class="tool-card" aria-label="ProofStamp tool">
@@ -47,7 +46,7 @@ app.innerHTML = `
           <img class="proof-point" src="/proof-point-card-marker.svg" alt="" aria-hidden="true" />
           <div>
             <h2 id="create-title">Choose what you want to keep</h2>
-            <p>Add a recording, screenshots, or a mixed set.</p>
+            <p>Add a recording, screenshots, or both.</p>
           </div>
         </div>
 
