@@ -227,6 +227,8 @@ h1 { max-width: 720px; margin: 0; color: var(--ps-blue); font-size: clamp(36px, 
 .result-card h3 { margin: 0 0 8px; color: var(--ps-blue); font-size: 22px; letter-spacing: -0.02em; }
 .result-card.failure h3 { color: #7d302a; }
 .result-card p { line-height: 1.55; }
+.result-files { margin: 0 0 16px; color: var(--ps-muted); font-size: 13px; }
+.result-files strong { color: var(--ps-graphite); font-weight: 650; overflow-wrap: anywhere; }
 .result-time { margin: 0 0 5px; }
 .big-time { display: block; margin: 0 0 16px; color: var(--ps-blue); font-size: clamp(21px, 4vw, 28px); letter-spacing: -0.02em; }
 details { margin-top: 16px; }

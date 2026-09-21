@@ -346,6 +346,17 @@ function renderCreated(proof: CreatedProof & { transport: "direct" | "relay" }):
 
   const title = document.createElement("h3");
   title.textContent = "Your ProofStamp is ready";
+  const included = document.createElement("p");
+  included.className = "result-files";
+  if (proof.manifest.files.length === 1) {
+    included.append("1 file included: ");
+    const fileName = document.createElement("strong");
+    fileName.textContent = proof.manifest.files[0].originalName;
+    included.append(fileName);
+  } else {
+    included.textContent = `${proof.manifest.files.length} files included`;
+  }
+
   const statement = document.createElement("p");
   statement.className = "result-time";
   statement.textContent = proof.manifest.files.length === 1 ? "This file existed by:" : `These ${proof.manifest.files.length} files existed by:`;
@@ -395,7 +406,7 @@ function renderCreated(proof: CreatedProof & { transport: "direct" | "relay" }):
     createPanel.querySelector<HTMLElement>(".file-picker")?.scrollIntoView({ block: "center" });
   });
 
-  createdResult.append(title, statement, time, explanation, download, downloadStatus, details, createAnother);
+  createdResult.append(title, included, statement, time, explanation, download, downloadStatus, details, createAnother);
 }
 
 createButton.addEventListener("click", async () => {
