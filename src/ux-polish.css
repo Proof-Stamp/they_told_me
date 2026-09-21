@@ -57,10 +57,6 @@
   margin-top: 8px;
 }
 
-#create-panel .card-heading > .proof-point {
-  display: none;
-}
-
 #create-panel .limit-note {
   margin-left: 0;
 }
@@ -168,15 +164,8 @@
   }
 
   .privacy-banner {
-    gap: 9px;
     margin-bottom: 8px;
     padding: 11px 12px;
-  }
-
-  .privacy-marker {
-    width: 22px;
-    height: 22px;
-    flex-basis: 22px;
   }
 
   .privacy-banner strong {
@@ -188,7 +177,7 @@
   }
 
   .mode-switch {
-    margin: -2px 0 8px;
+    margin-bottom: 8px;
   }
 
   .tool-card {
