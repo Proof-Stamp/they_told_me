@@ -28,12 +28,9 @@ app.innerHTML = `
     </section>
 
     <section class="tool-card" aria-label="ProofStamp tool">
-      <div class="tool-mode-row">
-        <img class="proof-point mode-proof-point" src="/proof-point-card-marker.svg" alt="" aria-hidden="true" />
-        <div class="mode-switch" aria-label="Choose a task">
-          <button id="create-mode" class="active" type="button" aria-pressed="true" aria-controls="create-panel">Create</button>
-          <button id="verify-mode" type="button" aria-pressed="false" aria-controls="verify-panel">Check</button>
-        </div>
+      <div class="mode-switch" aria-label="Choose a task">
+        <button id="create-mode" class="active" type="button" aria-pressed="true" aria-controls="create-panel">Create</button>
+        <button id="verify-mode" type="button" aria-pressed="false" aria-controls="verify-panel">Check</button>
       </div>
       <div id="create-panel" aria-labelledby="create-title">
         <div class="card-heading">
