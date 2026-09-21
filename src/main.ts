@@ -27,15 +27,13 @@ app.innerHTML = `
       <p class="hero-copy">Save a call recording or screenshot. Add independent proof the exact file existed by a specific time.</p>
     </section>
 
-    <div class="mode-switch" aria-label="Choose a task">
-      <button id="create-mode" class="active" type="button" aria-pressed="true" aria-controls="create-panel">Create</button>
-      <button id="verify-mode" type="button" aria-pressed="false" aria-controls="verify-panel">Check</button>
-    </div>
-
     <section class="tool-card" aria-label="ProofStamp tool">
+      <div class="mode-switch" aria-label="Choose a task">
+        <button id="create-mode" class="active" type="button" aria-pressed="true" aria-controls="create-panel">Create</button>
+        <button id="verify-mode" type="button" aria-pressed="false" aria-controls="verify-panel">Check</button>
+      </div>
       <div id="create-panel" aria-labelledby="create-title">
         <div class="card-heading">
-          <img class="proof-point" src="/proof-point-card-marker.svg" alt="" aria-hidden="true" />
           <div>
             <h2 id="create-title">Choose what you want to keep</h2>
             <p>Add a recording, screenshots, or both.</p>
@@ -71,7 +69,6 @@ app.innerHTML = `
 
       <div id="verify-panel" class="hidden" aria-labelledby="verify-title">
         <div class="card-heading">
-          <img class="proof-point" src="/proof-point-card-marker.svg" alt="" aria-hidden="true" />
           <div>
             <h2 id="verify-title">Check a ProofStamp</h2>
             <p>Choose a <code>.proofstamp.zip</code>. Everything is checked on this device.</p>

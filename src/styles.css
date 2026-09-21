@@ -69,7 +69,7 @@ h1 { max-width: 720px; margin: 0; color: var(--ps-blue); font-size: clamp(36px, 
   display: inline-grid;
   grid-template-columns: 1fr 1fr;
   gap: 3px;
-  margin: 0 0 4px;
+  margin: 0 0 18px;
   padding: 3px;
   border: 1px solid var(--ps-border);
   border-radius: 9px;
@@ -101,11 +101,10 @@ h1 { max-width: 720px; margin: 0; color: var(--ps-blue); font-size: clamp(36px, 
   background: var(--ps-white);
   box-shadow: 0 14px 40px rgba(14, 35, 68, 0.06);
 }
-.card-heading { display: flex; gap: 13px; align-items: flex-start; margin-bottom: 8px; }
-.proof-point { width: 16px; height: 16px; flex: 0 0 16px; margin-top: 5px; }
+.card-heading { display: flex; align-items: flex-start; margin-bottom: 8px; }
 .card-heading h2 { margin: 0 0 6px; color: var(--ps-blue); font-size: 23px; letter-spacing: -0.025em; }
 .card-heading p { margin: 0; color: var(--ps-muted); line-height: 1.5; }
-.limit-note { margin: 0 0 18px 29px; color: var(--ps-muted); font-size: 12px; }
+.limit-note { margin: 0 0 18px; color: var(--ps-muted); font-size: 12px; }
 
 .file-picker {
   display: grid;
