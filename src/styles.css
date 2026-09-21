@@ -194,6 +194,13 @@ h1 { max-width: 720px; margin: 0; color: var(--ps-blue); font-size: clamp(36px, 
 .text-input::placeholder { color: #8a939e; }
 .field-help { margin: 7px 0 18px; color: var(--ps-muted); font-size: 12px; line-height: 1.45; }
 
+#create-panel.proof-ready > .card-heading,
+#create-panel.proof-ready > .limit-note,
+#create-panel.proof-ready > .file-picker,
+#create-panel.proof-ready > .selection-wrap {
+  display: none;
+}
+
 .create-actions { display: flex; gap: 10px; }
 .primary-button, .secondary-button {
   min-height: 48px;
@@ -208,6 +215,9 @@ h1 { max-width: 720px; margin: 0; color: var(--ps-blue); font-size: clamp(36px, 
 .secondary-button:hover { background: var(--ps-surface); }
 .download-button { display: inline-flex; align-items: center; justify-content: center; width: auto; min-width: 190px; margin-top: 7px; }
 .download-note { margin: 9px 0 0; color: var(--ps-muted); font-size: 12px; }
+.download-status { margin: 10px 0 0; color: var(--ps-muted); font-size: 13px; line-height: 1.45; }
+.download-status strong { color: var(--ps-success); }
+.create-another-button { margin-top: 18px; }
 
 .status-box { margin-top: 18px; padding: 13px 14px; border-left: 4px solid var(--ps-blue); border-radius: 6px; background: var(--ps-surface); color: #30445c; font-size: 14px; line-height: 1.45; }
 .status-box.error { border-left-color: var(--ps-danger); background: #fbf3f2; color: #7d302a; }

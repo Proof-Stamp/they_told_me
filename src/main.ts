@@ -175,11 +175,21 @@ function formatBytes(bytes: number): string {
 
 function invalidateProof(): void {
   currentProof = null;
+  createPanel.classList.remove("proof-ready");
   createdResult.classList.add("hidden");
   createdResult.replaceChildren();
   createStatus.classList.add("hidden");
   if (proofDownloadUrl) URL.revokeObjectURL(proofDownloadUrl);
   proofDownloadUrl = null;
+}
+
+function resetCreation(): void {
+  selected = [];
+  labelInput.value = "";
+  createInput.value = "";
+  clearPreviews();
+  invalidateProof();
+  renderSelection();
 }
 
 function setCreationLocked(locked: boolean): void {
@@ -330,6 +340,7 @@ function localDateTime(date: Date): string {
 function renderCreated(proof: CreatedProof & { transport: "direct" | "relay" }): void {
   if (proofDownloadUrl) URL.revokeObjectURL(proofDownloadUrl);
   proofDownloadUrl = URL.createObjectURL(proof.packageBlob);
+  createPanel.classList.add("proof-ready");
   createdResult.replaceChildren();
   createdResult.className = "result-card success";
 
@@ -343,14 +354,30 @@ function renderCreated(proof: CreatedProof & { transport: "direct" | "relay" }):
   time.textContent = localDateTime(proof.timestamp.signedTime);
   const explanation = document.createElement("p");
   explanation.textContent = "Download and keep this ZIP. It contains your originals and everything needed to check the proof later.";
+
   const download = document.createElement("a");
   download.className = "primary-button download-button";
   download.href = proofDownloadUrl;
   download.download = `they-told-me-${proof.timestamp.signedTime.toISOString().replace(/[:.]/g, "-")}.proofstamp.zip`;
   download.textContent = "Download ProofStamp";
-  const downloadNote = document.createElement("p");
-  downloadNote.className = "download-note";
-  downloadNote.textContent = "Your browser will start the download. Keep the ZIP somewhere you can find it later.";
+
+  const downloadStatus = document.createElement("p");
+  downloadStatus.className = "download-status hidden";
+  downloadStatus.setAttribute("role", "status");
+  downloadStatus.setAttribute("aria-live", "polite");
+
+  download.addEventListener("click", () => {
+    download.textContent = "Download again";
+    downloadStatus.classList.remove("hidden");
+    downloadStatus.replaceChildren();
+
+    const started = document.createElement("strong");
+    started.textContent = "Download started ✓";
+    const guidance = document.createElement("span");
+    guidance.textContent = " Keep the ProofStamp ZIP somewhere you can find it later.";
+    downloadStatus.append(started, guidance);
+  });
+
   const details = document.createElement("details");
   const summary = document.createElement("summary");
   summary.textContent = "Technical details";
@@ -358,7 +385,17 @@ function renderCreated(proof: CreatedProof & { transport: "direct" | "relay" }):
   detailText.className = "technical-copy";
   detailText.textContent = `UTC ${proof.timestamp.signedTime.toISOString()} · FreeTSA RFC 3161 · SHA-256 · timestamp request sent through the ProofStamp relay · certificate revocation not checked by the browser verifier.`;
   details.append(summary, detailText);
-  createdResult.append(title, statement, time, explanation, download, downloadNote, details);
+
+  const createAnother = document.createElement("button");
+  createAnother.type = "button";
+  createAnother.className = "secondary-button create-another-button";
+  createAnother.textContent = "Create another ProofStamp";
+  createAnother.addEventListener("click", () => {
+    resetCreation();
+    createPanel.querySelector<HTMLElement>(".file-picker")?.scrollIntoView({ block: "center" });
+  });
+
+  createdResult.append(title, statement, time, explanation, download, downloadStatus, details, createAnother);
 }
 
 createButton.addEventListener("click", async () => {
