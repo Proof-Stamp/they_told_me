@@ -55,57 +55,70 @@ main { width: min(760px, calc(100% - 32px)); margin: 0 auto; padding: 54px 0 72p
 .hero { margin-bottom: 30px; }
 .eyebrow { margin: 0 0 10px; text-transform: uppercase; letter-spacing: 0.08em; font-size: 12px; font-weight: 700; color: var(--ps-blue); }
 h1 { max-width: 720px; margin: 0; color: var(--ps-blue); font-size: clamp(36px, 6vw, 54px); line-height: 1.03; letter-spacing: -0.045em; }
+@media (min-width: 1000px) {
+  .hero h1 { width: max-content; max-width: none; white-space: nowrap; }
+}
 .hero-copy { max-width: 670px; margin: 18px 0 0; color: var(--ps-muted); font-size: 18px; line-height: 1.55; }
 
-.privacy-banner {
-  display: flex;
-  gap: 12px;
-  align-items: center;
-  margin: 0 0 18px;
-  padding: 15px 16px;
-  border: 1px solid var(--ps-border);
-  border-radius: 12px;
-  background: #fafbfd;
+.privacy-note {
+  margin: 0 0 56px;
+  color: var(--ps-muted);
+  font-size: 13px;
+  line-height: 1.5;
 }
-.privacy-marker { width: 27px; height: 27px; flex: 0 0 27px; }
-.privacy-banner strong, .privacy-banner span { display: block; }
-.privacy-banner strong { color: var(--ps-graphite); font-size: 14px; font-weight: 650; }
-.privacy-banner span { margin-top: 3px; color: var(--ps-muted); font-size: 13px; }
+.privacy-note strong { color: var(--ps-graphite); font-weight: 650; }
 
 .mode-switch {
-  display: grid;
+  display: inline-grid;
   grid-template-columns: 1fr 1fr;
-  gap: 4px;
-  margin-bottom: 16px;
-  padding: 4px;
+  gap: 3px;
+  margin: 0 0 18px;
+  padding: 3px;
   border: 1px solid var(--ps-border);
-  border-radius: 12px;
+  border-radius: 9px;
   background: var(--ps-surface);
 }
 .mode-switch button {
-  min-height: 46px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  min-width: 88px;
+  min-height: 34px;
+  padding: 6px 14px;
   border: 0;
-  border-radius: 9px;
+  border-radius: 6px;
   background: transparent;
   color: var(--ps-muted);
+  font-size: 13px;
   font-weight: 650;
 }
-.mode-switch button.active { background: var(--ps-white); color: var(--ps-blue); box-shadow: 0 1px 2px rgba(14, 35, 68, 0.08); }
+.mode-switch button.active {
+  background: var(--ps-white);
+  color: var(--ps-blue);
+  box-shadow: 0 1px 2px rgba(14, 35, 68, 0.08);
+}
+.mode-switch button.active::before {
+  content: "";
+  width: 14px;
+  height: 14px;
+  flex: 0 0 14px;
+  background: url("/proof-point-card-marker.svg") center / contain no-repeat;
+}
 .mode-switch button:hover:not(.active) { color: var(--ps-blue); }
 
 .tool-card {
-  margin-bottom: 72px;
+  margin-bottom: 14px;
   padding: clamp(22px, 4vw, 34px);
   border: 1px solid var(--ps-border);
   border-radius: 16px;
   background: var(--ps-white);
   box-shadow: 0 14px 40px rgba(14, 35, 68, 0.06);
 }
-.card-heading { display: flex; gap: 13px; align-items: flex-start; margin-bottom: 8px; }
-.proof-point { width: 16px; height: 16px; flex: 0 0 16px; margin-top: 5px; }
+.card-heading { display: flex; align-items: flex-start; margin-bottom: 8px; }
 .card-heading h2 { margin: 0 0 6px; color: var(--ps-blue); font-size: 23px; letter-spacing: -0.025em; }
 .card-heading p { margin: 0; color: var(--ps-muted); line-height: 1.5; }
-.limit-note { margin: 0 0 18px 29px; color: var(--ps-muted); font-size: 12px; }
+.limit-note { margin: 0 0 18px; color: var(--ps-muted); font-size: 12px; }
 
 .file-picker {
   display: grid;
@@ -254,9 +267,9 @@ footer a {
   main { width: min(100% - 24px, 760px); padding-top: 38px; }
   .hero { margin-bottom: 24px; }
   .hero-copy { font-size: 16px; }
-  .privacy-banner { align-items: flex-start; }
   .mode-switch button { padding-inline: 8px; font-size: 13px; }
-  .tool-card { margin-bottom: 58px; padding: 20px 16px; }
+  .tool-card { margin-bottom: 12px; padding: 20px 16px; }
+  .privacy-note { margin-bottom: 42px; font-size: 12px; }
   .limit-note { margin-left: 0; }
   .file-picker { min-height: 104px; }
   .file-row { grid-template-columns: 72px minmax(0, 1fr); }

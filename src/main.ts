@@ -23,31 +23,20 @@ app.innerHTML = `
 
   <main id="top">
     <section class="hero" aria-labelledby="hero-title">
-      <p class="eyebrow">Your copy. Your proof.</p>
-      <h1 id="hero-title">Keep your own verifiable copy of what you were told.</h1>
-      <p class="hero-copy">Save a call recording, chat screenshot, or both. Add an independent time you can check later.</p>
+      <h1 id="hero-title">Keep proof of what they told you.</h1>
+      <p class="hero-copy">Save a call recording or screenshot. Get independent proof that the exact file existed by a specific time.</p>
     </section>
-
-    <section class="privacy-banner" aria-label="Privacy">
-      <img class="privacy-marker" src="/proof-point-card-marker.svg" alt="" aria-hidden="true" />
-      <div>
-        <strong>Your recordings and screenshots stay on this device.</strong>
-        <span>Only a small timestamp request leaves your browser.</span>
-      </div>
-    </section>
-
-    <div class="mode-switch" aria-label="Choose a task">
-      <button id="create-mode" class="active" type="button" aria-pressed="true" aria-controls="create-panel">Create ProofStamp</button>
-      <button id="verify-mode" type="button" aria-pressed="false" aria-controls="verify-panel">Check ProofStamp</button>
-    </div>
 
     <section class="tool-card" aria-label="ProofStamp tool">
+      <div class="mode-switch" aria-label="Choose a task">
+        <button id="create-mode" class="active" type="button" aria-pressed="true" aria-controls="create-panel">Create</button>
+        <button id="verify-mode" type="button" aria-pressed="false" aria-controls="verify-panel">Check</button>
+      </div>
       <div id="create-panel" aria-labelledby="create-title">
         <div class="card-heading">
-          <img class="proof-point" src="/proof-point-card-marker.svg" alt="" aria-hidden="true" />
           <div>
             <h2 id="create-title">Choose what you want to keep</h2>
-            <p>Add a recording, screenshots, or a mixed set.</p>
+            <p>Add a recording, screenshots, or both.</p>
           </div>
         </div>
 
@@ -80,7 +69,6 @@ app.innerHTML = `
 
       <div id="verify-panel" class="hidden" aria-labelledby="verify-title">
         <div class="card-heading">
-          <img class="proof-point" src="/proof-point-card-marker.svg" alt="" aria-hidden="true" />
           <div>
             <h2 id="verify-title">Check a ProofStamp</h2>
             <p>Choose a <code>.proofstamp.zip</code>. Everything is checked on this device.</p>
@@ -97,9 +85,11 @@ app.innerHTML = `
       </div>
     </section>
 
+    <p class="privacy-note"><strong>Your files stay on this device.</strong> Only a timestamp request leaves your browser.</p>
+
     <section id="how-it-works" class="info-section">
       <p class="eyebrow">How it works</p>
-      <h2>Keep the record. Add independent time.</h2>
+      <h2>Keep the record. Add an independent timestamp.</h2>
       <ol class="how-grid">
         <li><span>1</span><strong>Choose the files</strong><p>Add the recording, screenshots, or other files you want to preserve together.</p></li>
         <li><span>2</span><strong>Process on this device</strong><p>Your browser hashes the files and sends only a small timestamp request.</p></li>

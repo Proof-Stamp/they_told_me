@@ -57,10 +57,6 @@
   margin-top: 8px;
 }
 
-#create-panel .card-heading > .proof-point {
-  display: none;
-}
-
 #create-panel .limit-note {
   margin-left: 0;
 }
@@ -149,31 +145,52 @@
 
 @media (max-width: 640px) {
   main {
-    padding-top: 28px;
+    padding-top: 20px;
   }
 
   .hero {
-    margin-bottom: 18px;
+    margin-bottom: 14px;
   }
 
   h1 {
-    font-size: clamp(32px, 9vw, 38px);
-    line-height: 1.02;
+    font-size: clamp(30px, 8.5vw, 36px);
+    line-height: 1.03;
   }
 
   .hero-copy {
-    margin-top: 14px;
-    font-size: 16px;
-    line-height: 1.45;
-  }
-
-  .privacy-banner {
-    margin-bottom: 14px;
-    padding: 14px;
+    margin-top: 10px;
+    font-size: 15px;
+    line-height: 1.4;
   }
 
   .mode-switch {
     margin-bottom: 14px;
+  }
+
+  .tool-card {
+    padding-top: 18px;
+  }
+
+  .card-heading h2 {
+    font-size: 22px;
+  }
+
+  .card-heading p {
+    font-size: 15px;
+  }
+
+  #create-panel .limit-note {
+    margin-bottom: 12px;
+  }
+
+  .file-picker {
+    min-height: 96px;
+    padding: 16px 14px;
+  }
+
+  #create-panel .file-picker-cta,
+  #verify-panel .file-picker-cta {
+    margin-top: 10px;
   }
 
   #create-panel .file-picker-cta,
