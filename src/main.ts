@@ -42,6 +42,7 @@ app.innerHTML = `
     <section class="tool-card" aria-label="ProofStamp tool">
       <div id="create-panel" aria-labelledby="create-title">
         <div class="card-heading">
+          <img class="proof-point" src="/proof-point-card-marker.svg" alt="" aria-hidden="true" />
           <div>
             <h2 id="create-title">Choose what you want to keep</h2>
             <p>Add a recording, screenshots, or both.</p>
@@ -77,6 +78,7 @@ app.innerHTML = `
 
       <div id="verify-panel" class="hidden" aria-labelledby="verify-title">
         <div class="card-heading">
+          <img class="proof-point" src="/proof-point-card-marker.svg" alt="" aria-hidden="true" />
           <div>
             <h2 id="verify-title">Check a ProofStamp</h2>
             <p>Choose a <code>.proofstamp.zip</code>. Everything is checked on this device.</p>
