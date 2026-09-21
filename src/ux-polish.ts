@@ -205,7 +205,7 @@ function strengthenVerifyPicker(desktopDragDrop: boolean): void {
 function setupUxPolish(): void {
   const heroCopy = document.querySelector<HTMLElement>(".hero-copy");
   if (heroCopy) {
-    heroCopy.textContent = "Save a call recording or screenshot. Add independent proof the exact file existed by a specific time.";
+    heroCopy.textContent = "Save a call recording or screenshot. Get independent proof that the exact file existed by a specific time.";
   }
 
   addPrivacyVerification();

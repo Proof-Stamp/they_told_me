@@ -23,8 +23,8 @@ app.innerHTML = `
 
   <main id="top">
     <section class="hero" aria-labelledby="hero-title">
-      <h1 id="hero-title">Keep proof of what you were told.</h1>
-      <p class="hero-copy">Save a call recording or screenshot. Add independent proof the exact file existed by a specific time.</p>
+      <h1 id="hero-title">Keep proof of what they told you.</h1>
+      <p class="hero-copy">Save a call recording or screenshot. Get independent proof that the exact file existed by a specific time.</p>
     </section>
 
     <section class="tool-card" aria-label="ProofStamp tool">
@@ -89,7 +89,7 @@ app.innerHTML = `
 
     <section id="how-it-works" class="info-section">
       <p class="eyebrow">How it works</p>
-      <h2>Keep the record. Add independent time.</h2>
+      <h2>Keep the record. Add an independent timestamp.</h2>
       <ol class="how-grid">
         <li><span>1</span><strong>Choose the files</strong><p>Add the recording, screenshots, or other files you want to preserve together.</p></li>
         <li><span>2</span><strong>Process on this device</strong><p>Your browser hashes the files and sends only a small timestamp request.</p></li>
