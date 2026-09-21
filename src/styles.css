@@ -75,7 +75,7 @@ h1 { max-width: 720px; margin: 0; color: var(--ps-blue); font-size: clamp(36px, 
   display: inline-grid;
   grid-template-columns: 1fr 1fr;
   gap: 3px;
-  margin: 0 0 10px;
+  margin: 0 0 4px;
   padding: 3px;
   border: 1px solid var(--ps-border);
   border-radius: 9px;
