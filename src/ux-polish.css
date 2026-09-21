@@ -163,19 +163,6 @@
     line-height: 1.4;
   }
 
-  .privacy-banner {
-    margin-bottom: 8px;
-    padding: 11px 12px;
-  }
-
-  .privacy-banner strong {
-    font-size: 13px;
-  }
-
-  .privacy-banner span {
-    font-size: 12px;
-  }
-
   .mode-switch {
     margin-bottom: 8px;
   }

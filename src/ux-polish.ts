@@ -93,12 +93,6 @@ function wireSectionLinks(): void {
 }
 
 function addPrivacyVerification(): void {
-  const banner = document.querySelector<HTMLElement>(".privacy-banner");
-  const bannerStrong = banner?.querySelector<HTMLElement>("strong");
-  const bannerText = banner?.querySelector<HTMLElement>("span");
-  if (bannerStrong) bannerStrong.textContent = "Your files stay on this device.";
-  if (bannerText) bannerText.textContent = "Only a timestamp request leaves your browser.";
-
   const privacy = document.querySelector<HTMLElement>("#privacy");
   if (!privacy || privacy.querySelector(".privacy-check")) return;
 

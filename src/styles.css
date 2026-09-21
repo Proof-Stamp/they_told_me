@@ -57,19 +57,13 @@ main { width: min(760px, calc(100% - 32px)); margin: 0 auto; padding: 54px 0 72p
 h1 { max-width: 720px; margin: 0; color: var(--ps-blue); font-size: clamp(36px, 6vw, 54px); line-height: 1.03; letter-spacing: -0.045em; }
 .hero-copy { max-width: 670px; margin: 18px 0 0; color: var(--ps-muted); font-size: 18px; line-height: 1.55; }
 
-.privacy-banner {
-  display: flex;
-  gap: 12px;
-  align-items: center;
-  margin: 0 0 18px;
-  padding: 15px 16px;
-  border: 1px solid var(--ps-border);
-  border-radius: 12px;
-  background: #fafbfd;
+.privacy-note {
+  margin: 0 0 56px;
+  color: var(--ps-muted);
+  font-size: 13px;
+  line-height: 1.5;
 }
-.privacy-banner strong, .privacy-banner span { display: block; }
-.privacy-banner strong { color: var(--ps-graphite); font-size: 14px; font-weight: 650; }
-.privacy-banner span { margin-top: 3px; color: var(--ps-muted); font-size: 13px; }
+.privacy-note strong { color: var(--ps-graphite); font-weight: 650; }
 
 .mode-switch {
   display: inline-grid;
@@ -100,7 +94,7 @@ h1 { max-width: 720px; margin: 0; color: var(--ps-blue); font-size: clamp(36px, 
 .mode-switch button:hover:not(.active) { color: var(--ps-blue); }
 
 .tool-card {
-  margin-bottom: 72px;
+  margin-bottom: 14px;
   padding: clamp(22px, 4vw, 34px);
   border: 1px solid var(--ps-border);
   border-radius: 16px;
@@ -260,9 +254,9 @@ footer a {
   main { width: min(100% - 24px, 760px); padding-top: 38px; }
   .hero { margin-bottom: 24px; }
   .hero-copy { font-size: 16px; }
-  .privacy-banner { align-items: flex-start; }
   .mode-switch button { padding-inline: 8px; font-size: 13px; }
-  .tool-card { margin-bottom: 58px; padding: 20px 16px; }
+  .tool-card { margin-bottom: 12px; padding: 20px 16px; }
+  .privacy-note { margin-bottom: 42px; font-size: 12px; }
   .limit-note { margin-left: 0; }
   .file-picker { min-height: 104px; }
   .file-row { grid-template-columns: 72px minmax(0, 1fr); }

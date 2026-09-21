@@ -27,13 +27,6 @@ app.innerHTML = `
       <p class="hero-copy">Save a call recording or screenshot. Add independent proof the exact file existed by a specific time.</p>
     </section>
 
-    <section class="privacy-banner" aria-label="Privacy">
-      <div>
-        <strong>Your files stay on this device.</strong>
-        <span>Only a timestamp request leaves your browser.</span>
-      </div>
-    </section>
-
     <div class="mode-switch" aria-label="Choose a task">
       <button id="create-mode" class="active" type="button" aria-pressed="true" aria-controls="create-panel">Create</button>
       <button id="verify-mode" type="button" aria-pressed="false" aria-controls="verify-panel">Check</button>
@@ -94,6 +87,8 @@ app.innerHTML = `
         <div id="verify-result" class="result-card hidden" role="status" aria-live="polite"></div>
       </div>
     </section>
+
+    <p class="privacy-note"><strong>Your files stay on this device.</strong> Only a timestamp request leaves your browser.</p>
 
     <section id="how-it-works" class="info-section">
       <p class="eyebrow">How it works</p>
