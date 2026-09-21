@@ -73,25 +73,23 @@ h1 { max-width: 720px; margin: 0; color: var(--ps-blue); font-size: clamp(36px, 
 .privacy-banner span { margin-top: 3px; color: var(--ps-muted); font-size: 13px; }
 
 .mode-switch {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 4px;
-  margin-bottom: 16px;
-  padding: 4px;
-  border: 1px solid var(--ps-border);
-  border-radius: 12px;
-  background: var(--ps-surface);
+  display: flex;
+  justify-content: flex-end;
+  margin: -2px 0 10px;
 }
 .mode-switch button {
-  min-height: 46px;
+  min-height: 34px;
+  padding: 4px 2px;
   border: 0;
-  border-radius: 9px;
   background: transparent;
-  color: var(--ps-muted);
+  color: var(--ps-blue);
+  font-size: 13px;
   font-weight: 650;
+  text-decoration: underline;
+  text-underline-offset: 0.2em;
 }
-.mode-switch button.active { background: var(--ps-white); color: var(--ps-blue); box-shadow: 0 1px 2px rgba(14, 35, 68, 0.08); }
-.mode-switch button:hover:not(.active) { color: var(--ps-blue); }
+.mode-switch button.active { display: none; }
+.mode-switch button:hover { color: var(--ps-blue-hover); }
 
 .tool-card {
   margin-bottom: 72px;
