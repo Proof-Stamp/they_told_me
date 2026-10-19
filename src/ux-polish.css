@@ -132,6 +132,14 @@
   margin: 0;
 }
 
+.info-section .info-disclosure-heading {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  margin: 0;
+  line-height: 1.2;
+}
+
 .info-disclosure-title {
   color: var(--ps-blue);
   font-size: 20px;
