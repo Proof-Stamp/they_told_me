@@ -319,7 +319,7 @@ createInput.addEventListener("change", () => {
   requestAnimationFrame(() => {
     createButton.scrollIntoView({
       behavior: window.matchMedia("(prefers-reduced-motion: reduce)").matches ? "auto" : "smooth",
-      block: "nearest",
+      block: "center",
     });
   });
 });
