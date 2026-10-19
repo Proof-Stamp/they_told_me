@@ -202,6 +202,7 @@ h1 { max-width: 720px; margin: 0; color: var(--ps-blue); font-size: clamp(36px, 
 }
 
 .create-actions { display: flex; gap: 10px; }
+#create-proof { scroll-margin-block-end: 20px; }
 .primary-button, .secondary-button {
   min-height: 48px;
   padding: 11px 17px;
