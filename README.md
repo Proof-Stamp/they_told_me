@@ -93,6 +93,8 @@ See [timestamp trust and independent verification](docs/VERIFICATION.md) and [Cl
 
 Before a public release, smoke-test the production flow and confirm the header links for **How it works** and **Privacy** open their corresponding disclosures, including when loading the page directly with `#how-it-works` or `#privacy`.
 
+UI smoke-test checklist: confirm both file pickers have accessible names matching their visible actions; confirm the How it works and Privacy disclosures retain h2 semantics, support keyboard interaction and direct hash links; check that a valid file selection or drag-and-drop brings Create ProofStamp into view without moving keyboard focus, while invalid selections do not; check create, download, verify, damaged ZIP and repeat flows; inspect desktop/mobile and 200% zoom. Report untested behavior as NOT VERIFIED.
+
 ## Security
 
 Please report security-sensitive issues privately rather than opening a public issue. See [SECURITY.md](SECURITY.md).

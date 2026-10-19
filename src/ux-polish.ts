@@ -58,15 +58,22 @@ function makeSectionDisclosure(section: HTMLElement, label: string): void {
   const details = document.createElement("details");
   details.className = "info-disclosure";
   const summary = document.createElement("summary");
-  summary.setAttribute("aria-label", label);
-
-  if (eyebrow instanceof HTMLElement) summary.append(eyebrow);
   const title = document.createElement("span");
   title.className = "info-disclosure-title";
   title.textContent = heading.textContent ?? label;
-  summary.append(title);
 
-  heading.remove();
+  // Keep the real heading inside the native summary so it remains navigable.
+  heading.replaceChildren();
+  heading.classList.add("info-disclosure-heading");
+  if (eyebrow instanceof HTMLElement) {
+    const eyebrowText = document.createElement("span");
+    eyebrowText.className = "eyebrow";
+    eyebrowText.textContent = eyebrow.textContent;
+    heading.append(eyebrowText);
+    eyebrow.remove();
+  }
+  heading.append(title);
+  summary.append(heading);
   const content = document.createElement("div");
   content.className = "info-disclosure-content";
   while (section.firstChild) content.append(section.firstChild);
@@ -158,7 +165,8 @@ function strengthenCreatePicker(desktopDragDrop: boolean): void {
   const hint = document.querySelector<HTMLElement>("#file-picker-hint");
   const intro = panel?.querySelector<HTMLElement>(".card-heading p");
   const selectionWrap = document.querySelector<HTMLElement>("#selection-wrap");
-  if (!picker || !title || !hint || !selectionWrap) return;
+  const input = picker?.querySelector<HTMLInputElement>('input[type="file"]');
+  if (!picker || !title || !hint || !selectionWrap || !input) return;
 
   if (intro) intro.textContent = "Add a recording, screenshots, or both.";
   title.hidden = true;
@@ -167,9 +175,11 @@ function strengthenCreatePicker(desktopDragDrop: boolean): void {
   if (!cta) {
     cta = document.createElement("span");
     cta.className = "file-picker-cta";
-    cta.setAttribute("aria-hidden", "true");
     picker.insertBefore(cta, hint);
   }
+  cta.id = "create-files-action-label";
+  cta.removeAttribute("aria-hidden");
+  input.setAttribute("aria-labelledby", cta.id);
 
   const syncCopy = () => {
     const hasFiles = !selectionWrap.classList.contains("hidden");
@@ -190,7 +200,8 @@ function strengthenVerifyPicker(desktopDragDrop: boolean): void {
   const title = picker?.querySelector<HTMLElement>(".file-picker-title");
   const hint = picker?.querySelector<HTMLElement>("span:not(.file-picker-title)");
   const intro = panel?.querySelector<HTMLElement>(".card-heading p");
-  if (!picker || !title || !hint) return;
+  const input = picker?.querySelector<HTMLInputElement>('input[type="file"]');
+  if (!picker || !title || !hint || !input) return;
 
   const redundantCta = picker.querySelector<HTMLElement>(".file-picker-cta");
   redundantCta?.remove();
@@ -198,7 +209,9 @@ function strengthenVerifyPicker(desktopDragDrop: boolean): void {
   if (intro) intro.textContent = "Everything is checked on this device.";
   title.textContent = "Choose ProofStamp ZIP";
   title.classList.add("file-picker-cta");
+  title.id = "verify-files-action-label";
   title.removeAttribute("aria-hidden");
+  input.setAttribute("aria-labelledby", title.id);
   hint.textContent = desktopDragDrop ? "or drag it here" : "Choose one ZIP file.";
 }
 
