@@ -314,6 +314,14 @@ createInput.addEventListener("change", () => {
   selected = next;
   invalidateProof();
   renderSelection();
+
+  // Let the newly rendered file list settle before bringing the next action into view.
+  requestAnimationFrame(() => {
+    createButton.scrollIntoView({
+      behavior: window.matchMedia("(prefers-reduced-motion: reduce)").matches ? "auto" : "smooth",
+      block: "nearest",
+    });
+  });
 });
 
 clearFilesButton.addEventListener("click", () => {
